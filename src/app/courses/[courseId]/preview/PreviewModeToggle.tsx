@@ -56,7 +56,7 @@ export function PreviewModeToggle({
             title={mode === "lms" ? "Course preview (LMS simulation)" : "Course preview (learner view)"}
             src={iframeSrc}
             className="h-[calc(100vh-12rem)] w-full border-0 rounded"
-            sandbox="allow-scripts allow-same-origin"
+            sandbox="allow-scripts allow-same-origin allow-downloads"
           />
         </div>
       )}

@@ -54,7 +54,8 @@ B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Bu
 ## Course builder (Phase 2)
 
 - **Edit course** (`/courses/[id]/edit`): Sidebar shows course structure (modules → lessons → pages). Add/rename/delete modules, lessons, and pages. Click a page to edit.
-- **Page editor**: Edit page title; add and edit **content blocks** (text, heading, image, video embed) and **interaction blocks** (multiple choice, true/false, reflection). Changes save on blur.
+- **Page editor**: Edit page title; add and edit **content blocks** (text, heading, image, video embed, table, file download) and **interaction blocks** (multiple choice, true/false, reflection). Changes save on blur.
+- **File downloads**: attach .docx, .xlsx, .pptx, .pdf or .csv files that are bundled into the SCORM package. See [docs/file-downloads.md](./docs/file-downloads.md).
 
 ## MVP scope
 

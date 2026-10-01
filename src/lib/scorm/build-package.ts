@@ -18,6 +18,11 @@ interface VideoMapping {
   localPath: string;
 }
 
+interface FileToBundle {
+  url: string;
+  localPath: string;
+}
+
 async function fetchAndBundleImage(
   url: string,
   index: number,
@@ -85,6 +90,67 @@ async function fetchAndBundleVideo(
   } catch {
     return null;
   }
+}
+
+async function fetchAndBundleFile(file: FileToBundle, contentFolder: JSZip): Promise<boolean> {
+  try {
+    const res = await fetch(file.url, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok) return false;
+    contentFolder.file(file.localPath, Buffer.from(await res.arrayBuffer()));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Safe, readable package filename: learners see it when the file saves. */
+function sanitiseFilename(name: string): string {
+  const dot = name.lastIndexOf(".");
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase().replace(/[^a-z0-9]/g, "") : "";
+  const base = (dot > 0 ? name.slice(0, dot) : name)
+    .normalize("NFKD")
+    .replace(/[^\w\s.-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .slice(0, 80) || "download";
+  return ext ? `${base}.${ext}` : base;
+}
+
+/**
+ * Assigns each distinct file_download URL a unique path under files/.
+ * Names are compared case-insensitively because some LMS hosts run on case-insensitive filesystems.
+ */
+function collectFiles(course: CourseForExport): FileToBundle[] {
+  const byUrl = new Map<string, FileToBundle>();
+  const usedNames = new Set<string>();
+
+  for (const mod of course.modules ?? []) {
+    for (const lesson of mod.lessons ?? []) {
+      for (const page of lesson.pages ?? []) {
+        for (const block of page.blocks ?? []) {
+          if (block.category !== "content" || block.type !== "file_download") continue;
+          const url = typeof block.data?.url === "string" ? block.data.url.trim() : "";
+          if (!/^https?:\/\//i.test(url) || byUrl.has(url)) continue;
+
+          const original =
+            typeof block.data?.filename === "string" && block.data.filename
+              ? block.data.filename
+              : url.split("?")[0].split("/").pop() || "download";
+          const safe = sanitiseFilename(original);
+          const dot = safe.lastIndexOf(".");
+          const stem = dot > 0 ? safe.slice(0, dot) : safe;
+          const ext = dot > 0 ? safe.slice(dot) : "";
+          let name = safe;
+          for (let n = 2; usedNames.has(name.toLowerCase()); n++) name = `${stem}-${n}${ext}`;
+          usedNames.add(name.toLowerCase());
+
+          byUrl.set(url, { url, localPath: `files/${name}` });
+        }
+      }
+    }
+  }
+
+  return Array.from(byUrl.values());
 }
 
 function collectImageUrls(course: CourseForExport): string[] {
@@ -164,6 +230,24 @@ function rewriteVideoUrls(
         return {
           ...block,
           data: { ...block.data, url: localPath, mimeType: "video/mp4", sourceType: "upload" },
+        };
+      }
+    }
+    return block;
+  });
+}
+
+function rewriteFileUrls(
+  blocks: BlockForExport[],
+  urlMap: Map<string, string>
+): BlockForExport[] {
+  return blocks.map((block) => {
+    if (block.category === "content" && block.type === "file_download" && typeof block.data?.url === "string") {
+      const localPath = urlMap.get(block.data.url.trim());
+      if (localPath) {
+        return {
+          ...block,
+          data: { ...block.data, url: localPath },
         };
       }
     }
@@ -285,9 +369,18 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
     else exportWarnings.push(`Could not bundle MP4 video asset: ${videoUrls[idx]}`);
   });
 
+  const files = collectFiles(course);
+  const fileUrlMap = new Map<string, string>();
+  const fileResults = await Promise.all(files.map((file) => fetchAndBundleFile(file, contentFolder)));
+  fileResults.forEach((ok, idx) => {
+    if (ok) fileUrlMap.set(files[idx].url, files[idx].localPath);
+    else exportWarnings.push(`Could not bundle download file: ${files[idx].url}`);
+  });
+
   const additionalManifestFiles = new Set<string>(["scorm-api.js"]);
   for (const localImage of imageUrlMap.values()) additionalManifestFiles.add(`content/${localImage}`);
   for (const localVideo of videoUrlMap.values()) additionalManifestFiles.add(`content/${localVideo}`);
+  for (const localFile of fileUrlMap.values()) additionalManifestFiles.add(`content/${localFile}`);
   if (logoPath) additionalManifestFiles.add(`content/${logoPath}`);
 
   const manifestXml = buildManifest12({
@@ -337,7 +430,10 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
           totalScoreMax: Math.max(1, totalScoreMax),
           gradingKeysByBlockId,
         };
-        const rewrittenBlocks = rewriteVideoUrls(rewriteImageUrls(page.blocks, imageUrlMap), videoUrlMap);
+        const rewrittenBlocks = rewriteFileUrls(
+          rewriteVideoUrls(rewriteImageUrls(page.blocks, imageUrlMap), videoUrlMap),
+          fileUrlMap
+        );
         const html = renderPageHtml({
           pageTitle: page.title,
           blocks: rewrittenBlocks,

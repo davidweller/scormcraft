@@ -94,6 +94,7 @@ const CONTENT_TYPES: { type: ContentBlockType; label: string }[] = [
   { type: "key_insight", label: "Key insight" },
   { type: "key_point", label: "Key point" },
   { type: "table", label: "Table" },
+  { type: "file_download", label: "File download" },
 ];
 
 const INTERACTION_TYPES: { type: InteractionBlockType; label: string }[] = [
@@ -115,6 +116,7 @@ function getDefaultData(category: "content" | "interaction", type: string): Reco
       case "key_insight": return { text: "" };
       case "key_point": return { title: "", text: "" };
       case "table": return { html: "" };
+      case "file_download": return { url: "", filename: "", label: "", description: "", mimeType: "", size: 0 };
       default: return {};
     }
   } else {

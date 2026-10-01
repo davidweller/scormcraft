@@ -214,11 +214,18 @@ export default function MediaLibraryPage() {
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
-                  <img
-                    src={item.url}
-                    alt={item.alt || item.filename}
-                    className="w-full h-full object-cover"
-                  />
+                  {item.mimeType.startsWith("image/") ? (
+                    <img
+                      src={item.url}
+                      alt={item.alt || item.filename}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-gray-50 p-2 text-center">
+                      <span className="text-3xl" aria-hidden="true">{item.mimeType.startsWith("video/") ? "🎬" : "📄"}</span>
+                      <span className="mt-1 line-clamp-2 text-xs text-gray-600">{item.filename}</span>
+                    </div>
+                  )}
                   {item.source === "ai_generated" && (
                     <span className="absolute top-2 right-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
                       AI
@@ -266,11 +273,21 @@ export default function MediaLibraryPage() {
               </button>
             </div>
             <div className="p-4">
-              <img
-                src={selectedMedia.url}
-                alt={selectedMedia.alt || selectedMedia.filename}
-                className="w-full max-h-80 object-contain rounded-lg bg-gray-100"
-              />
+              {selectedMedia.mimeType.startsWith("image/") ? (
+                <img
+                  src={selectedMedia.url}
+                  alt={selectedMedia.alt || selectedMedia.filename}
+                  className="w-full max-h-80 object-contain rounded-lg bg-gray-100"
+                />
+              ) : (
+                <a
+                  href={selectedMedia.url}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-gray-100 py-10 text-sm text-indigo-600 hover:underline"
+                >
+                  <span aria-hidden="true">{selectedMedia.mimeType.startsWith("video/") ? "🎬" : "📄"}</span>
+                  Open {selectedMedia.filename}
+                </a>
+              )}
               <dl className="mt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-gray-500">Filename</dt>

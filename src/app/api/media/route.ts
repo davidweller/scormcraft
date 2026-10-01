@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { uploadBlob, deleteBlob, isBlobConfigured } from "@/lib/blob";
+import { DOCUMENT_EXTENSIONS_LABEL, DOCUMENT_MAX_SIZE, resolveUploadedDocument } from "@/lib/document-files";
 
 export async function GET(request: Request) {
   try {
@@ -71,9 +72,10 @@ export async function POST(request: Request) {
     const hasMp4Mime = file.type === "video/mp4";
     const hasMp4Ext = lowerName.endsWith(".mp4");
     const isMp4 = hasMp4Mime && hasMp4Ext;
-    if (!isImage && !isMp4) {
+    const documentType = !isImage && !isMp4 ? resolveUploadedDocument(fileName, file.type) : null;
+    if (!isImage && !isMp4 && !documentType) {
       return NextResponse.json(
-        { error: "Only image files and MP4 videos are allowed" },
+        { error: `Only images, MP4 videos, and ${DOCUMENT_EXTENSIONS_LABEL} documents are allowed` },
         { status: 400 }
       );
     }
@@ -83,8 +85,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    // Store the canonical MIME, since browsers often report documents as octet-stream
+    const mimeType = documentType ? documentType.mimeType : file.type;
 
-    const maxSize = isMp4 ? 100 * 1024 * 1024 : 4.5 * 1024 * 1024;
+    const maxSize = isMp4 ? 100 * 1024 * 1024 : documentType ? DOCUMENT_MAX_SIZE : 4.5 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         {
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
     console.log(`Uploading file: ${file.name}, size: ${file.size}, type: ${file.type}`);
     
     const { url } = await uploadBlob(pathname, file, {
-      contentType: file.type,
+      contentType: mimeType,
     });
 
     console.log(`Upload successful: ${url}`);
@@ -113,7 +117,7 @@ export async function POST(request: Request) {
       data: {
         url,
         filename: file.name,
-        mimeType: file.type,
+        mimeType,
         size: file.size,
         alt: alt || null,
         source: "upload",

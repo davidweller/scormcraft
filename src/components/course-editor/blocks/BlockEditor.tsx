@@ -9,6 +9,7 @@ import { BlockWrap } from "./BlockWrap";
 import MediaPickerModal from "@/components/media/MediaPickerModal";
 import type { Media } from "@/types/media";
 import { RichTextEditor } from "../RichTextEditor";
+import { formatFileSize, getDocumentTypeByMime } from "@/lib/document-files";
 
 export interface BlockEditorProps {
   courseId: string;
@@ -134,6 +135,16 @@ export function BlockEditor({
         <BlockWrap {...wrapProps}>
           <TableBlockEditor
             data={block.data as { html?: string }}
+            onSave={(d) => save(d)}
+          />
+        </BlockWrap>
+      );
+    }
+    if (block.type === "file_download") {
+      return (
+        <BlockWrap {...wrapProps}>
+          <FileDownloadBlockEditor
+            data={block.data as FileDownloadData}
             onSave={(d) => save(d)}
           />
         </BlockWrap>
@@ -406,6 +417,103 @@ function VideoEmbedBlockEditor({
         onClose={() => setShowPicker(false)}
         onSelect={handleMediaSelect}
         mode="video"
+      />
+    </div>
+  );
+}
+
+interface FileDownloadData {
+  url?: string;
+  filename?: string;
+  label?: string;
+  description?: string;
+  mimeType?: string;
+  size?: number;
+}
+
+function FileDownloadBlockEditor({
+  data,
+  onSave,
+}: {
+  data: FileDownloadData;
+  onSave: (d: Record<string, unknown>) => void;
+}) {
+  const [file, setFile] = useState({
+    url: data.url ?? "",
+    filename: data.filename ?? "",
+    mimeType: data.mimeType ?? "",
+    size: data.size ?? 0,
+  });
+  const [label, setLabel] = useState(data.label ?? "");
+  const [description, setDescription] = useState(data.description ?? "");
+  const [showPicker, setShowPicker] = useState(false);
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Escape") {
+      e.currentTarget.blur();
+    }
+  }
+
+  function handleMediaSelect(media: Media) {
+    const next = { url: media.url, filename: media.filename, mimeType: media.mimeType, size: media.size };
+    // Default the link text to the filename without its extension
+    const nextLabel = label || media.filename.replace(/\.[^.]+$/, "");
+    setFile(next);
+    setLabel(nextLabel);
+    onSave({ ...next, label: nextLabel, description });
+  }
+
+  const typeLabel = getDocumentTypeByMime(file.mimeType)?.label;
+  const meta = [typeLabel, formatFileSize(file.size)].filter(Boolean).join(" · ");
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="flex-1 truncate rounded border border-gray-200 bg-gray-50 px-2 py-1 text-sm text-gray-700">
+          {file.url ? (
+            <>
+              <span aria-hidden="true">📄 </span>
+              {file.filename}
+              {meta && <span className="text-gray-400"> ({meta})</span>}
+            </>
+          ) : (
+            <span className="text-gray-400">No file chosen</span>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowPicker(true)}
+          className="shrink-0 rounded bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
+        >
+          {file.url ? "Replace file" : "Choose file"}
+        </button>
+      </div>
+      <input
+        type="text"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onBlur={() => onSave({ ...file, label, description })}
+        onKeyDown={handleKeyDown}
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        placeholder="Link text (e.g. Practice data spreadsheet)"
+      />
+      <input
+        type="text"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        onBlur={() => onSave({ ...file, label, description })}
+        onKeyDown={handleKeyDown}
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        placeholder="Description (optional)"
+      />
+      <p className="text-xs text-gray-500">
+        The file is bundled into the SCORM package so learners can download it from the LMS.
+      </p>
+      <MediaPickerModal
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        onSelect={handleMediaSelect}
+        mode="file"
       />
     </div>
   );
