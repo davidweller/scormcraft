@@ -4,6 +4,7 @@
 
 import type { BrandConfig } from "@/types/branding";
 import { DEFAULT_BRAND_CONFIG } from "@/types/branding";
+import { formatFileSize, getDocumentTypeByMime } from "@/lib/document-files";
 
 export interface Block {
   id: string;
@@ -133,6 +134,18 @@ export function renderContentBlock(block: Block): string {
     const html = typeof c.html === "string" ? c.html : "";
     if (!html) return "";
     return `<div class="content-table reveal">${sanitizeRichText(html)}</div>`;
+  }
+  if (block.type === "file_download") {
+    const url = typeof c.url === "string" ? c.url.trim() : "";
+    // Packaged files are relative paths; preview uses the https Blob URL. Anything else (javascript: etc.) is dropped.
+    if (!url || (/^[a-z][a-z0-9+.-]*:/i.test(url) && !/^https?:\/\//i.test(url))) return "";
+    const filename = typeof c.filename === "string" ? c.filename : "";
+    const label = typeof c.label === "string" && c.label.trim() ? c.label.trim() : filename || "Download file";
+    const description = typeof c.description === "string" ? c.description.trim() : "";
+    const typeLabel = getDocumentTypeByMime(typeof c.mimeType === "string" ? c.mimeType : "")?.label;
+    const meta = [typeLabel, formatFileSize(Number(c.size) || 0)].filter(Boolean).join(" · ");
+    const icon = `<svg class="content-download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>`;
+    return `<a class="content-download reveal" href="${escapeHtml(url)}" download="${escapeHtml(filename)}">${icon}<span class="content-download-text"><span class="content-download-label">${escapeHtml(label)}</span>${description ? `<span class="content-download-desc">${escapeHtml(description)}</span>` : ""}${meta ? `<span class="content-download-meta">${escapeHtml(meta)}</span>` : ""}</span></a>`;
   }
   return "";
 }
@@ -447,6 +460,13 @@ ${buildScormRuntimeScript(scormRuntime)}
     .content-card-body { margin: 0; }
     .content-card-body ul, .content-card-body ol { margin: 0.5em 0; padding-left: 1.25em; }
     .content-card-body li { margin: 0.2em 0; }
+    .content-download { display: flex; align-items: center; gap: 16px; margin: 2rem 0; padding: 16px 20px; background: var(--brand-card-bg, #ffffff); border: 1px solid #e5e7eb; border-radius: 12px; color: inherit; text-decoration: none; transition: border-color 0.15s, box-shadow 0.15s; }
+    .content-download:hover, .content-download:focus-visible { border-color: var(--brand-accent, #ff7700); box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .content-download-icon { flex-shrink: 0; width: 28px; height: 28px; color: var(--brand-accent, #ff7700); }
+    .content-download-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .content-download-label { font-weight: 600; }
+    .content-download-desc { font-size: 0.95rem; }
+    .content-download-meta { font-size: 0.85rem; opacity: 0.65; }
     .content-table { margin: 2rem 0; overflow-x: auto; }
     .content-table table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
     .content-table th, .content-table td { padding: 0.75rem 1rem; border: 1px solid #e5e7eb; text-align: left; }

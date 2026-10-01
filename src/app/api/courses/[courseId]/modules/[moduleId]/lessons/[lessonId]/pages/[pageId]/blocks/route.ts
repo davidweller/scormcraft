@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import type { BlockCategory, ContentBlockType, InteractionBlockType } from "@/types/course";
 
-const CONTENT_TYPES: ContentBlockType[] = ["text", "heading", "image", "video_embed", "key_insight", "key_point"];
+const CONTENT_TYPES: ContentBlockType[] = ["text", "heading", "image", "video_embed", "key_insight", "key_point", "table", "file_download"];
 const INTERACTION_TYPES: InteractionBlockType[] = ["multiple_choice", "true_false", "reflection", "drag_and_drop", "matching", "dialog_cards"];
 
 export async function POST(

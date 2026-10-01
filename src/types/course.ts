@@ -9,7 +9,8 @@ export type ContentBlockType =
   | "video_embed"
   | "key_insight"
   | "key_point"
-  | "table";
+  | "table"
+  | "file_download";
 export type InteractionBlockType =
   | "multiple_choice"
   | "true_false"

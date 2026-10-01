@@ -114,9 +114,22 @@ export async function GET(
     gradingKeysByBlockId,
   };
 
+  // Blob links are cross-origin, so the browser would ignore the download filename; route them through our own origin
+  const blocks = (page.blocks ?? []).map((block) =>
+    block.type === "file_download" && typeof block.data?.url === "string" && block.data.url
+      ? {
+          ...block,
+          data: {
+            ...block.data,
+            url: `${baseUrl}/api/media/download?url=${encodeURIComponent(block.data.url)}`,
+          },
+        }
+      : block
+  );
+
   const html = renderPageHtml({
     pageTitle: page.title,
-    blocks: page.blocks,
+    blocks,
     courseTitle: course.title,
     prevHref,
     nextHref,
