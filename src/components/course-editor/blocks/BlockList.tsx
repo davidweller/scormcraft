@@ -111,7 +111,7 @@ function getDefaultData(category: "content" | "interaction", type: string): Reco
     switch (type) {
       case "text": return { text: "" };
       case "heading": return { level: 1, text: "" };
-      case "image": return { url: "", alt: "" };
+      case "image": return { url: "", alt: "", caption: "" };
       case "video_embed": return { url: "" };
       case "key_insight": return { text: "" };
       case "key_point": return { title: "", text: "" };

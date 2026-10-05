@@ -102,8 +102,10 @@ export function renderContentBlock(block: Block): string {
   if (block.type === "image") {
     const url = typeof c.url === "string" ? c.url : "";
     const alt = typeof c.alt === "string" ? c.alt : "";
+    const caption = typeof c.caption === "string" ? c.caption.trim() : "";
     if (!url) return "";
-    return `<figure class="content-image reveal"><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" /></figure>`;
+    const figcaption = caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : "";
+    return `<figure class="content-image reveal"><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}" />${figcaption}</figure>`;
   }
   if (block.type === "video_embed") {
     const url = typeof c.url === "string" ? c.url : "";
@@ -449,6 +451,7 @@ ${buildScormRuntimeScript(scormRuntime)}
     .content-heading:first-of-type { margin-top: 0; }
     .content-image { margin: 3rem 0; }
     .content-image img { max-width: 100%; height: auto; border-radius: 8px; }
+    .content-image figcaption { margin-top: 0.6em; font-style: italic; font-size: 0.95rem; opacity: 0.8; white-space: pre-line; }
     .content-video { margin: 3rem 0; }
     .content-video iframe, .content-video video { width: 100%; aspect-ratio: 16/9; border-radius: 8px; }
     .key-insight { margin: 3rem 0; padding: 1.5rem 1.5rem 1.5rem 1.75rem; border-left: 4px solid var(--brand-accent, #ff7700); background: rgba(0,0,0,0.02); font-size: 1.1rem; line-height: 1.65; border-radius: 0 8px 8px 0; }
@@ -649,9 +652,25 @@ function buildCheckAnswerScript(): string {
       var feedback = el.querySelector('.feedback');
       if (!dragList || !btn || !feedback) return;
       
+      // Shuffle on load, re-rolling until the start order isn't already the answer
+      var correctForShuffle;
+      try { correctForShuffle = JSON.parse(el.getAttribute('data-correct-order') || '[]'); } catch(err) { correctForShuffle = []; }
+      var shuffled = Array.prototype.slice.call(dragList.querySelectorAll('.drag-item'));
+      for (var attempt = 0; attempt < 10 && shuffled.length > 1; attempt++) {
+        for (var s = shuffled.length - 1; s > 0; s--) {
+          var r = Math.floor(Math.random() * (s + 1));
+          var tmp = shuffled[s]; shuffled[s] = shuffled[r]; shuffled[r] = tmp;
+        }
+        var solved = correctForShuffle.length === shuffled.length && shuffled.every(function(item, i) {
+          return parseInt(item.getAttribute('data-index'), 10) === correctForShuffle[i];
+        });
+        if (!solved) break;
+      }
+      shuffled.forEach(function(item) { dragList.appendChild(item); });
+
       var draggedItem = null;
       var items = dragList.querySelectorAll('.drag-item');
-      
+
       [].forEach.call(items, function(item) {
         item.addEventListener('dragstart', function(e) {
           draggedItem = this;
