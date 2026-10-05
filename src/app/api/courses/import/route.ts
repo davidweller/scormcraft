@@ -9,7 +9,7 @@ import { uploadBlob, isBlobConfigured } from "@/lib/blob";
 
 export const maxDuration = 600; // section-by-section import can take several minutes
 
-const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4.5MB (Vercel serverless limit)
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (above Vercel's 4.5MB body limit - self-hosted/local only)
 
 const DOCX_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: `File too large. Maximum size is 4.5MB, your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.` },
+        { error: `File too large. Maximum size is 10MB, your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.` },
         { status: 400 }
       );
     }

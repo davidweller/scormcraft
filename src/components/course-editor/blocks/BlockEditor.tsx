@@ -94,7 +94,7 @@ export function BlockEditor({
       return (
         <BlockWrap {...wrapProps}>
           <ImageBlockEditor
-            data={block.data as { url?: string; alt?: string }}
+            data={block.data as { url?: string; alt?: string; caption?: string }}
             onSave={(d) => save(d)}
           />
         </BlockWrap>
@@ -292,11 +292,12 @@ function ImageBlockEditor({
   data,
   onSave,
 }: {
-  data: { url?: string; alt?: string };
+  data: { url?: string; alt?: string; caption?: string };
   onSave: (d: Record<string, unknown>) => void;
 }) {
   const [url, setUrl] = useState(data.url ?? "");
   const [alt, setAlt] = useState(data.alt ?? "");
+  const [caption, setCaption] = useState(data.caption ?? "");
   const [showPicker, setShowPicker] = useState(false);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -308,7 +309,7 @@ function ImageBlockEditor({
   function handleMediaSelect(media: Media) {
     setUrl(media.url);
     if (media.alt) setAlt(media.alt);
-    onSave({ url: media.url, alt: media.alt || alt });
+    onSave({ url: media.url, alt: media.alt || alt, caption });
   }
 
   return (
@@ -318,7 +319,7 @@ function ImageBlockEditor({
           type="url"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          onBlur={() => onSave({ url, alt })}
+          onBlur={() => onSave({ url, alt, caption })}
           onKeyDown={handleKeyDown}
           className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           placeholder="Image URL"
@@ -335,14 +336,25 @@ function ImageBlockEditor({
         type="text"
         value={alt}
         onChange={(e) => setAlt(e.target.value)}
-        onBlur={() => onSave({ url, alt })}
+        onBlur={() => onSave({ url, alt, caption })}
         onKeyDown={handleKeyDown}
         className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         placeholder="Alt text"
       />
+      <textarea
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+        onBlur={() => onSave({ url, alt, caption })}
+        rows={2}
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        placeholder="Description (optional, shown below the image in italics)"
+      />
       {url && (
-        // eslint-disable-next-line @next/next/no-img-element -- user-provided URL, preview only
-        <img src={url} alt={alt || "Preview"} className="max-h-40 rounded object-contain" />
+        <figure>
+          {/* eslint-disable-next-line @next/next/no-img-element -- user-provided URL, preview only */}
+          <img src={url} alt={alt || "Preview"} className="max-h-40 rounded object-contain" />
+          {caption.trim() && <figcaption className="mt-1 text-sm italic text-gray-600">{caption}</figcaption>}
+        </figure>
       )}
       <MediaPickerModal
         isOpen={showPicker}

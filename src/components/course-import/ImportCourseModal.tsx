@@ -92,9 +92,9 @@ export default function ImportCourseModal({
       return;
     }
 
-    const maxSize = 4.5 * 1024 * 1024; // 4.5MB
+    const maxSize = 10 * 1024 * 1024; // 10MB
     if (selectedFile.size > maxSize) {
-      setError(`File too large. Maximum size is 4.5MB, your file is ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB.`);
+      setError(`File too large. Maximum size is 10MB, your file is ${(selectedFile.size / 1024 / 1024).toFixed(1)}MB.`);
       return;
     }
 
@@ -259,7 +259,7 @@ export default function ImportCourseModal({
                           and drop
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
-                          Word (.docx) or Markdown (.md) from Obsidian, up to 4.5MB
+                          Word (.docx) or Markdown (.md) from Obsidian, up to 10MB
                         </p>
                       </div>
 
