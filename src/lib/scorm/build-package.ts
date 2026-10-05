@@ -288,6 +288,7 @@ export interface BlockForExport {
 export interface CourseForExport {
   id: string;
   title: string;
+  overview?: string | null;
   brandConfig?: BrandConfig | null;
   modules: {
     id: string;

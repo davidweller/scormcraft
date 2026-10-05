@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useState } from "react";
 
 interface RichTextEditorProps {
   content: string;
@@ -28,6 +28,14 @@ export function RichTextEditor({
         blockquote: false,
         horizontalRule: false,
         code: false,
+        link: {
+          openOnClick: false,
+          autolink: true,
+          linkOnPaste: true,
+          defaultProtocol: "https",
+          protocols: ["mailto"],
+          HTMLAttributes: { target: "_blank", rel: "noopener noreferrer" },
+        },
       }),
       Placeholder.configure({
         placeholder,
@@ -54,6 +62,32 @@ export function RichTextEditor({
   const handleBlur = useCallback(() => {
     onBlur?.();
   }, [onBlur]);
+
+  // null = link input closed; otherwise the URL being edited.
+  const [linkUrl, setLinkUrl] = useState<string | null>(null);
+
+  const openLinkInput = useCallback(() => {
+    if (!editor) return;
+    setLinkUrl((editor.getAttributes("link").href as string | undefined) ?? "");
+  }, [editor]);
+
+  const applyLink = useCallback(() => {
+    if (!editor || linkUrl === null) return;
+    let url = linkUrl.trim();
+    if (!url) {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      if (!/^(https?:\/\/|mailto:)/i.test(url)) url = url.includes("@") && !url.includes("/") ? `mailto:${url}` : `https://${url}`;
+      const chain = editor.chain().focus().extendMarkRange("link");
+      // With nothing selected, insert the URL itself as the link text.
+      if (editor.state.selection.empty && !editor.isActive("link")) {
+        chain.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] }).run();
+      } else {
+        chain.setLink({ href: url }).run();
+      }
+    }
+    setLinkUrl(null);
+  }, [editor, linkUrl]);
 
   if (!editor) {
     return null;
@@ -91,6 +125,10 @@ export function RichTextEditor({
         .rich-text-editor .ProseMirror em {
           font-style: italic;
         }
+        .rich-text-editor .ProseMirror a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
         .rich-text-editor .ProseMirror .is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
@@ -116,6 +154,14 @@ export function RichTextEditor({
         </ToolbarButton>
         <div className="w-px h-4 bg-gray-200 mx-1" />
         <ToolbarButton
+          onClick={openLinkInput}
+          isActive={editor.isActive("link") || linkUrl !== null}
+          title="Link (select text first)"
+        >
+          <LinkIcon />
+        </ToolbarButton>
+        <div className="w-px h-4 bg-gray-200 mx-1" />
+        <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           isActive={editor.isActive("bulletList")}
           title="Bullet List"
@@ -130,6 +176,46 @@ export function RichTextEditor({
           <NumberedListIcon />
         </ToolbarButton>
       </div>
+      {linkUrl !== null && (
+        <div className="mb-1 flex items-center gap-1">
+          <input
+            type="url"
+            autoFocus
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                applyLink();
+              } else if (e.key === "Escape") {
+                setLinkUrl(null);
+                editor.commands.focus();
+              }
+            }}
+            placeholder="https://example.com"
+            className="min-w-0 flex-1 rounded border border-gray-300 px-2 py-0.5 text-sm focus:border-blue-500 focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={applyLink}
+            className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700"
+          >
+            Apply
+          </button>
+          {editor.isActive("link") && (
+            <button
+              type="button"
+              onClick={() => {
+                editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                setLinkUrl(null);
+              }}
+              className="rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+      )}
       <EditorContent
         editor={editor}
         onBlur={handleBlur}
@@ -178,6 +264,15 @@ function ItalicIcon() {
   return (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
       <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
+    </svg>
+  );
+}
+
+function LinkIcon() {
+  return (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
     </svg>
   );
 }
