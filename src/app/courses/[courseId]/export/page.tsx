@@ -7,7 +7,9 @@ import { useState } from "react";
 export default function ExportPage() {
   const params = useParams();
   const courseId = params.courseId as string;
+  const [format, setFormat] = useState<"scorm" | "docx">("scorm");
   const [version, setVersion] = useState<"1.2" | "2004">("1.2");
+  const [includeAnswers, setIncludeAnswers] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,6 +21,8 @@ export default function ExportPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          format,
+          includeAnswers,
           version,
           completionRules: {},
           scoring: {},
@@ -32,7 +36,7 @@ export default function ExportPage() {
       const blob = await res.blob();
       const disposition = res.headers.get("Content-Disposition");
       const match = disposition?.match(/filename="?([^";]+)"?/);
-      const filename = match?.[1] ?? "scorm-course.zip";
+      const filename = match?.[1] ?? (format === "docx" ? "course.docx" : "scorm-course.zip");
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -51,8 +55,8 @@ export default function ExportPage() {
       <div className="mx-auto max-w-xl">
         <div>
           <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">← Course</Link>
-          <h1 className="mt-2 text-2xl font-bold">Export SCORM</h1>
-          <p className="mt-1 text-sm text-gray-500">Choose options and download your package.</p>
+          <h1 className="mt-2 text-2xl font-bold">Export course</h1>
+          <p className="mt-1 text-sm text-gray-500">Choose a format and download your course.</p>
         </div>
 
         {error && (
@@ -60,6 +64,51 @@ export default function ExportPage() {
         )}
 
         <div className="mt-8 space-y-6">
+          <fieldset>
+            <legend className="block text-sm font-medium text-gray-700">Format</legend>
+            <div className="mt-2 space-y-2">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="format"
+                  value="scorm"
+                  checked={format === "scorm"}
+                  onChange={() => setFormat("scorm")}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="font-medium">SCORM package (.zip)</span>
+                  <span className="block text-gray-500">Upload to your LMS.</span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="radio"
+                  name="format"
+                  value="docx"
+                  checked={format === "docx"}
+                  onChange={() => setFormat("docx")}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="font-medium">Word document (.docx)</span>
+                  <span className="block text-gray-500">For review, editing or print. Interactions become written questions.</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          {format === "docx" ? (
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={includeAnswers}
+                onChange={(e) => setIncludeAnswers(e.target.checked)}
+              />
+              Include answers and explanations
+            </label>
+          ) : (
+          <>
           <div>
             <label className="block text-sm font-medium text-gray-700">SCORM version</label>
             <select
@@ -74,6 +123,8 @@ export default function ExportPage() {
           <p className="text-sm text-gray-500">
             Completion and scoring use default behaviour (complete/incomplete per SCO). LMS settings can be configured in your LMS when importing.
           </p>
+          </>
+          )}
         </div>
 
         <div className="mt-10 flex gap-2">
@@ -83,7 +134,7 @@ export default function ExportPage() {
             disabled={loading}
             className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {loading ? "Preparing…" : "Download ZIP"}
+            {loading ? "Preparing…" : format === "docx" ? "Download DOCX" : "Download ZIP"}
           </button>
           <Link
             href={`/courses/${courseId}`}

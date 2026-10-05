@@ -23,13 +23,23 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function decodeHtmlAttr(s: string): string {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
 function nl2br(s: string): string {
   return escapeHtml(s).replace(/\n/g, "<br />");
 }
 
 /**
  * Sanitize rich text HTML to allow only safe tags for display.
- * Allows: p, strong, em, b, i, ul, ol, li, br
+ * Allows: p, strong, em, b, i, ul, ol, li, br, table tags, and a (http/https/mailto href only,
+ * opened in a new tab so the LMS frame is not navigated away).
  * Strips all other tags and attributes.
  */
 function sanitizeRichText(html: string): string {
@@ -45,6 +55,7 @@ function sanitizeRichText(html: string): string {
   
   // Process HTML by parsing tags
   let result = "";
+  let openLinks = 0;
   let i = 0;
   
   while (i < html.length) {
@@ -64,7 +75,21 @@ function sanitizeRichText(html: string): string {
       
       if (tagNameMatch) {
         const tagName = tagNameMatch[1].toLowerCase();
-        if (allowedTags.has(tagName)) {
+        if (tagName === "a") {
+          if (isClosing) {
+            if (openLinks > 0) {
+              result += "</a>";
+              openLinks--;
+            }
+          } else {
+            const hrefMatch = tagContent.match(/\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+            const href = decodeHtmlAttr(hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "").trim();
+            if (/^(https?:\/\/|mailto:)/i.test(href)) {
+              result += `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">`;
+              openLinks++;
+            }
+          }
+        } else if (allowedTags.has(tagName)) {
           // Output the allowed tag (stripped of attributes)
           if (isClosing) {
             result += `</${tagName}>`;
@@ -85,7 +110,7 @@ function sanitizeRichText(html: string): string {
     }
   }
   
-  return result;
+  return result + "</a>".repeat(openLinks);
 }
 
 export function renderContentBlock(block: Block): string {

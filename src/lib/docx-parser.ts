@@ -192,7 +192,7 @@ export function formatDocumentForAI(doc: ParsedDocument): string {
   
   // Keep inline formatting as clean HTML (strip attributes)
   content = content.replace(/<strong[^>]*>/gi, "<strong>");
-  content = content.replace(/<b[^>]*>/gi, "<strong>");
+  content = content.replace(/<b\b[^>]*>/gi, "<strong>");
   content = content.replace(/<\/b>/gi, "</strong>");
   content = content.replace(/<em[^>]*>/gi, "<em>");
   // Important: use a word-boundary so <img> doesn't match this regex.
@@ -204,7 +204,7 @@ export function formatDocumentForAI(doc: ParsedDocument): string {
   content = content.replace(/<thead[^>]*>/gi, "<thead>");
   content = content.replace(/<tbody[^>]*>/gi, "<tbody>");
   content = content.replace(/<tr[^>]*>/gi, "<tr>");
-  content = content.replace(/<th[^>]*>/gi, "<th>");
+  content = content.replace(/<th\b[^>]*>/gi, "<th>");
   content = content.replace(/<td[^>]*>/gi, "<td>");
   
   // Keep docx image placeholders as explicit markers the AI can turn into image blocks.
