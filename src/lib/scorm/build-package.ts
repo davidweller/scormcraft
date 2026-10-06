@@ -7,16 +7,31 @@ import {
   type GradingKey,
 } from "./render-page-html";
 import type { BrandConfig } from "@/types/branding";
+import {
+  SIDECAR_PATH,
+  buildSidecar,
+  serialiseSidecar,
+  toSidecarBlocks,
+  type SidecarAsset,
+  type SidecarPage,
+} from "./sidecar";
+import { APP_VERSION } from "@/lib/app-version";
 
-interface ImageMapping {
+/**
+ * A bundled asset. The extra metadata beyond localPath exists so the sidecar
+ * can describe the asset well enough for the importer to recreate its Media
+ * row without re-deriving anything from the bytes.
+ */
+interface AssetMapping {
   originalUrl: string;
   localPath: string;
+  filename: string;
+  mimeType: string;
+  size: number;
 }
 
-interface VideoMapping {
-  originalUrl: string;
-  localPath: string;
-}
+type ImageMapping = AssetMapping;
+type VideoMapping = AssetMapping;
 
 interface FileToBundle {
   url: string;
@@ -44,7 +59,13 @@ async function fetchAndBundleImage(
 
       const filename = `img_${index}.${ext}`;
       contentFolder.file(filename, buf);
-      return { originalUrl: url, localPath: filename };
+      return {
+        originalUrl: url,
+        localPath: filename,
+        filename,
+        mimeType: contentType,
+        size: buf.length,
+      };
     }
 
     const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -66,7 +87,13 @@ async function fetchAndBundleImage(
     const filename = `img_${index}.${ext}`;
     contentFolder.file(filename, buf);
 
-    return { originalUrl: url, localPath: filename };
+    return {
+      originalUrl: url,
+      localPath: filename,
+      filename: url.split("?")[0].split("/").pop() || filename,
+      mimeType: contentType || `image/${ext === "jpg" ? "jpeg" : ext}`,
+      size: buf.length,
+    };
   } catch {
     return null;
   }
@@ -86,20 +113,33 @@ async function fetchAndBundleVideo(
     const buf = Buffer.from(await res.arrayBuffer());
     const filename = `video_${index}.mp4`;
     contentFolder.file(filename, buf);
-    return { originalUrl: url, localPath: filename };
+    return {
+      originalUrl: url,
+      localPath: filename,
+      filename: url.split("?")[0].split("/").pop() || filename,
+      mimeType: "video/mp4",
+      size: buf.length,
+    };
   } catch {
     return null;
   }
 }
 
-async function fetchAndBundleFile(file: FileToBundle, contentFolder: JSZip): Promise<boolean> {
+async function fetchAndBundleFile(
+  file: FileToBundle,
+  contentFolder: JSZip
+): Promise<{ mimeType: string; size: number } | null> {
   try {
     const res = await fetch(file.url, { signal: AbortSignal.timeout(15000) });
-    if (!res.ok) return false;
-    contentFolder.file(file.localPath, Buffer.from(await res.arrayBuffer()));
-    return true;
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    contentFolder.file(file.localPath, buf);
+    return {
+      mimeType: res.headers.get("content-type") || "application/octet-stream",
+      size: buf.length,
+    };
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -289,23 +329,57 @@ export interface CourseForExport {
   id: string;
   title: string;
   overview?: string | null;
+  audience?: string | null;
+  tone?: string | null;
+  complianceLevel?: string | null;
+  targetWordCount?: number | null;
   brandConfig?: BrandConfig | null;
+  ilos?: unknown;
+  assessmentPlan?: unknown;
+  interactionConfig?: unknown;
+  /** SCORM manifest metadata and import provenance. See src/lib/scorm/sidecar.ts. */
+  scormMetadata?: unknown;
   modules: {
     id: string;
     title: string;
+    order?: number;
     lessons: {
       id: string;
       title: string;
+      order?: number;
       pages: {
         id: string;
         title: string;
+        order?: number;
+        /**
+         * Prisma returns this from getCourseForExport, but it was previously
+         * absent from this type, so the exporter could not see it.
+         */
+        completionRules?: unknown;
         blocks: BlockForExport[];
       }[];
     }[];
   }[];
 }
 
-export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> {
+export interface BuildScormOptions {
+  /**
+   * Write the round-trip sidecar into the package. Default true.
+   *
+   * Omitting it does NOT hide answer keys: renderInteractionBlock already
+   * writes data-correct-index / data-correct / data-correct-order into the
+   * shipped HTML and the runtime grades client-side, so every key is already
+   * plaintext in the package. The flag exists for package size and for authors
+   * who would rather their course were not re-importable into this app.
+   */
+  includeSidecar?: boolean;
+}
+
+export async function buildScorm12Zip(
+  course: CourseForExport,
+  options: BuildScormOptions = {}
+): Promise<Buffer> {
+  const includeSidecar = options.includeSidecar !== false;
   const zip = new JSZip();
   const pages: { page: CourseForExport["modules"][0]["lessons"][0]["pages"][0]; index: number }[] = [];
   let index = 0;
@@ -331,6 +405,7 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
 
   const brandConfig = course.brandConfig ?? undefined;
   let logoPath: string | undefined;
+  let logoSize = 0;
   const logoUrl =
     brandConfig?.logoUrl && typeof brandConfig.logoUrl === "string" ? brandConfig.logoUrl : null;
   if (logoUrl) {
@@ -341,6 +416,7 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
         const ext = logoUrl.includes(".png") ? "png" : logoUrl.includes(".svg") ? "svg" : "png";
         contentFolder.file(`logo.${ext}`, buf);
         logoPath = `logo.${ext}`;
+        logoSize = buf.length;
       }
     } catch {
       // Skip logo if fetch fails
@@ -372,11 +448,52 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
 
   const files = collectFiles(course);
   const fileUrlMap = new Map<string, string>();
+  const sidecarAssets: SidecarAsset[] = [];
   const fileResults = await Promise.all(files.map((file) => fetchAndBundleFile(file, contentFolder)));
-  fileResults.forEach((ok, idx) => {
-    if (ok) fileUrlMap.set(files[idx].url, files[idx].localPath);
-    else exportWarnings.push(`Could not bundle download file: ${files[idx].url}`);
+  fileResults.forEach((result, idx) => {
+    if (result) {
+      fileUrlMap.set(files[idx].url, files[idx].localPath);
+      sidecarAssets.push({
+        zipPath: `content/${files[idx].localPath}`,
+        kind: "file",
+        filename: files[idx].localPath.split("/").pop() || files[idx].localPath,
+        mimeType: result.mimeType,
+        size: result.size,
+      });
+    } else {
+      exportWarnings.push(`Could not bundle download file: ${files[idx].url}`);
+    }
   });
+
+  for (const image of imageResults) {
+    if (!image) continue;
+    sidecarAssets.push({
+      zipPath: `content/${image.localPath}`,
+      kind: "image",
+      filename: image.filename,
+      mimeType: image.mimeType,
+      size: image.size,
+    });
+  }
+  for (const video of videoResults) {
+    if (!video) continue;
+    sidecarAssets.push({
+      zipPath: `content/${video.localPath}`,
+      kind: "video",
+      filename: video.filename,
+      mimeType: video.mimeType,
+      size: video.size,
+    });
+  }
+  if (logoPath) {
+    sidecarAssets.push({
+      zipPath: `content/${logoPath}`,
+      kind: "logo",
+      filename: logoPath,
+      mimeType: logoPath.endsWith(".svg") ? "image/svg+xml" : "image/png",
+      size: logoSize,
+    });
+  }
 
   const additionalManifestFiles = new Set<string>(["scorm-api.js"]);
   for (const localImage of imageUrlMap.values()) additionalManifestFiles.add(`content/${localImage}`);
@@ -384,11 +501,15 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
   for (const localFile of fileUrlMap.values()) additionalManifestFiles.add(`content/${localFile}`);
   if (logoPath) additionalManifestFiles.add(`content/${logoPath}`);
 
+  const manifestIdentifier = course.id
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .replace(/^([^a-zA-Z])/, "c_$1");
   const manifestXml = buildManifest12({
     courseId: course.id,
     courseTitle: course.title,
     pages: pageEntries,
     additionalFiles: Array.from(additionalManifestFiles),
+    sidecarPath: includeSidecar ? SIDECAR_PATH : undefined,
   });
   zip.file("imsmanifest.xml", manifestXml);
 
@@ -411,6 +532,7 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
     }
   }
 
+  const sidecarPages: SidecarPage[] = [];
   let pageIdx = 0;
   for (const mod of course.modules ?? []) {
     const moduleIndex = course.modules!.indexOf(mod);
@@ -451,8 +573,37 @@ export async function buildScorm12Zip(course: CourseForExport): Promise<Buffer> 
           lessonTitle: lesson.title,
         });
         contentFolder.file(`page_${i}.html`, html);
+
+        // The sidecar stores the REWRITTEN blocks, so its asset urls are the
+        // zip-relative paths that are actually present in the package.
+        sidecarPages.push({
+          id: page.id,
+          title: page.title,
+          order: typeof page.order === "number" ? page.order : i,
+          completionRules:
+            page.completionRules && typeof page.completionRules === "object"
+              ? (page.completionRules as Record<string, unknown>)
+              : null,
+          href: `content/page_${i}.html`,
+          blocks: toSidecarBlocks(rewrittenBlocks),
+        });
       }
     }
+  }
+
+  if (includeSidecar) {
+    zip.file(
+      SIDECAR_PATH,
+      serialiseSidecar(
+        buildSidecar({
+          course,
+          pages: sidecarPages,
+          assets: sidecarAssets,
+          manifestIdentifier,
+          appVersion: APP_VERSION,
+        })
+      )
+    );
   }
 
   const blob = await zip.generateAsync({ type: "nodebuffer" });

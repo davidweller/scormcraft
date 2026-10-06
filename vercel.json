@@ -1,7 +1,13 @@
 {
   "functions": {
     "src/app/api/courses/import/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
+    },
+    "src/app/api/courses/import-scorm/analyze/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/courses/import-scorm/commit/route.ts": {
+      "maxDuration": 300
     }
   }
 }

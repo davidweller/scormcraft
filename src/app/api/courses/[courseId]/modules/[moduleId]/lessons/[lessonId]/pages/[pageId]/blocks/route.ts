@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  CONTENT_BLOCK_TYPES,
+  INTERACTION_BLOCK_TYPES,
+  isSystemBlockType,
+} from "@/types/course";
 import type { BlockCategory, ContentBlockType, InteractionBlockType } from "@/types/course";
-
-const CONTENT_TYPES: ContentBlockType[] = ["text", "heading", "image", "video_embed", "key_insight", "key_point", "table", "file_download"];
-const INTERACTION_TYPES: InteractionBlockType[] = ["multiple_choice", "true_false", "reflection", "drag_and_drop", "matching", "dialog_cards"];
 
 export async function POST(
   request: Request,
@@ -27,12 +29,21 @@ export async function POST(
       return NextResponse.json({ error: "type is required" }, { status: 400 });
     }
 
-    if (category === "content" && !CONTENT_TYPES.includes(type as ContentBlockType)) {
+    if (category === "content" && !CONTENT_BLOCK_TYPES.includes(type as ContentBlockType)) {
       return NextResponse.json({ error: `Invalid content block type: ${type}` }, { status: 400 });
     }
 
-    if (category === "interaction" && !INTERACTION_TYPES.includes(type as InteractionBlockType)) {
+    if (category === "interaction" && !INTERACTION_BLOCK_TYPES.includes(type as InteractionBlockType)) {
       return NextResponse.json({ error: `Invalid interaction block type: ${type}` }, { status: 400 });
+    }
+
+    // Known type, but only the import pipeline (which writes via createMany)
+    // may produce it.
+    if (isSystemBlockType(type)) {
+      return NextResponse.json(
+        { error: `Block type '${type}' cannot be created directly.` },
+        { status: 400 }
+      );
     }
 
     const count = await prisma.block.count({ where: { pageId } });

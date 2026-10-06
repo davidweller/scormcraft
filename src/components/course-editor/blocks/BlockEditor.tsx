@@ -10,6 +10,7 @@ import MediaPickerModal from "@/components/media/MediaPickerModal";
 import type { Media } from "@/types/media";
 import { RichTextEditor } from "../RichTextEditor";
 import { formatFileSize, getDocumentTypeByMime } from "@/lib/document-files";
+import { sanitizeHtmlClient } from "@/lib/html/sanitize-client";
 
 export interface BlockEditorProps {
   courseId: string;
@@ -636,7 +637,9 @@ function TableBlockEditor({
           {html ? (
             <div
               className="overflow-x-auto rounded border border-gray-200 p-2 text-sm [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-50 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_td]:border [&_td]:border-gray-300 [&_td]:px-3 [&_td]:py-2"
-              dangerouslySetInnerHTML={{ __html: html }}
+              // Table HTML is hand-authored here and arbitrary after a SCORM
+              // import, so it is sanitised before it reaches the DOM.
+              dangerouslySetInnerHTML={{ __html: sanitizeHtmlClient(html) }}
             />
           ) : (
             <p className="text-sm text-gray-400 italic">No table content. Click &quot;Edit HTML&quot; to add a table.</p>

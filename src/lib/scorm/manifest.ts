@@ -23,8 +23,14 @@ export function buildManifest12(options: {
   courseTitle: string;
   pages: PageEntry[];
   additionalFiles?: string[];
+  /**
+   * Path of the round-trip sidecar, declared as an `asset` resource that no
+   * <item> references. An LMS that prunes unreferenced files would otherwise
+   * strip it, and anything in the organization tree would be launchable.
+   */
+  sidecarPath?: string;
 }): string {
-  const { courseId, courseTitle, pages, additionalFiles = [] } = options;
+  const { courseId, courseTitle, pages, additionalFiles = [], sidecarPath } = options;
   const safeId = courseId.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^([^a-zA-Z])/, "c_$1");
   const extraFiles = additionalFiles
     .map((f) => `      <file href="${escapeXml(f)}" />`)
@@ -41,6 +47,9 @@ export function buildManifest12(options: {
         `    <resource identifier="res_${p.identifier}" type="webcontent" adlcp:scormtype="sco" href="${escapeXml(p.href)}">\n      <file href="${escapeXml(p.href)}" />${extraFiles ? `\n${extraFiles}` : ""}\n    </resource>`
     )
     .join("\n");
+  const sidecarResource = sidecarPath
+    ? `\n    <resource identifier="res_scormcraft_sidecar" type="webcontent" adlcp:scormtype="asset">\n      <file href="${escapeXml(sidecarPath)}" />\n    </resource>`
+    : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <manifest identifier="${escapeXml(safeId)}" version="1"
   xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
@@ -58,7 +67,7 @@ ${items}
     </organization>
   </organizations>
   <resources>
-${resources}
+${resources}${sidecarResource}
   </resources>
 </manifest>
 `;

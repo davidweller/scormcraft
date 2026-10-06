@@ -113,6 +113,61 @@ function sanitizeRichText(html: string): string {
   return result + "</a>".repeat(openLinks);
 }
 
+/** FNV-1a, 32-bit. Stable across runs and platforms. */
+function fnv1a(input: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+/**
+ * Fisher-Yates over [0..n), driven by an xorshift32 PRNG seeded from `seed`.
+ * The same seed always yields the same permutation, which is what makes the
+ * export byte-reproducible and the matching shuffle reversible on import.
+ */
+export function seededShuffleIndices(n: number, seed: string): number[] {
+  const indices = Array.from({ length: n }, (_, i) => i);
+  let state = fnv1a(seed) || 0x9e3779b9;
+  const next = () => {
+    state ^= state << 13;
+    state >>>= 0;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    state >>>= 0;
+    return state;
+  };
+  for (let i = n - 1; i > 0; i--) {
+    const j = next() % (i + 1);
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
+/** Marker identifying packages this app produced. Read by the SCORM importer. */
+export const GENERATOR_ID = "scormcraft/1";
+
+/**
+ * Stamp `data-sc-*` attributes onto a rendered block's root element.
+ *
+ * Without these, reverse-parsing our own export means sniffing CSS classes,
+ * which is a heuristic. With them the importer's high-confidence path is exact.
+ * The attributes are injected into the existing root tag rather than added via
+ * a wrapper element, so the rendered DOM and CSS are unchanged.
+ */
+function withBlockMarkers(html: string, block: Block): string {
+  if (!html) return html;
+  const match = html.match(/^(\s*<[a-zA-Z][a-zA-Z0-9]*)/);
+  if (!match) return html;
+  const attrs =
+    ` data-sc-block="${escapeHtml(block.id)}"` +
+    ` data-sc-cat="${escapeHtml(block.category)}"` +
+    ` data-sc-type="${escapeHtml(block.type)}"`;
+  return match[1] + attrs + html.slice(match[1].length);
+}
+
 export function renderContentBlock(block: Block): string {
   const c = block.data || {};
   if (block.type === "text") {
@@ -173,6 +228,12 @@ export function renderContentBlock(block: Block): string {
     const meta = [typeLabel, formatFileSize(Number(c.size) || 0)].filter(Boolean).join(" · ");
     const icon = `<svg class="content-download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>`;
     return `<a class="content-download reveal" href="${escapeHtml(url)}" download="${escapeHtml(filename)}">${icon}<span class="content-download-text"><span class="content-download-label">${escapeHtml(label)}</span>${description ? `<span class="content-download-desc">${escapeHtml(description)}</span>` : ""}${meta ? `<span class="content-download-meta">${escapeHtml(meta)}</span>` : ""}</span></a>`;
+  }
+  if (block.type === "embedded_html") {
+    // Deliberately empty. A preserved page is not rendered INSIDE another page
+    // — it IS a page, emitted verbatim by build-package.ts. Falling through to
+    // the default below would be indistinguishable from a bug.
+    return "";
   }
   return "";
 }
@@ -240,12 +301,15 @@ export function renderInteractionBlock(
     const matchDataAttrs = gradingKey && gradingKey.type === "matching"
       ? ` data-scorm-graded="true" data-block-id="${escapeHtml(block.id)}" data-pair-count="${pairs.length}"`
       : ` data-pair-count="${pairs.length}"`;
-    const shuffledRight = [...pairs].sort(() => Math.random() - 0.5);
-    const rightIndexMap = shuffledRight.map(p => pairs.indexOf(p));
+    // Deterministic, seeded from the block id. A Math.random() shuffle made the
+    // export non-reproducible (so round-trip fixtures were impossible) and gave
+    // a learner a different order on every reload mid-attempt.
+    const rightIndexMap = seededShuffleIndices(pairs.length, block.id);
+    const shuffledRight = rightIndexMap.map((i) => pairs[i]);
     const leftHtml = pairs.map((p, i) => 
       `<li class="match-item match-left" data-index="${i}">${escapeHtml(String((p as { left: string }).left || ""))}</li>`
     ).join("");
-    const rightHtml = shuffledRight.map((p, i) => 
+    const rightHtml = shuffledRight.map((p, i) =>
       `<li class="match-item match-right" data-index="${rightIndexMap[i]}">${escapeHtml(String((p as { right: string }).right || ""))}</li>`
     ).join("");
     return `<div class="interaction matching reveal"${matchDataAttrs}${explanationAttr}><p class="question">${nl2br(question)}</p><p class="match-instruction">Click an item on the left, then click its match on the right.</p><div class="match-container"><ul class="match-column match-left-col">${leftHtml}</ul><svg class="match-lines" aria-hidden="true"></svg><ul class="match-column match-right-col">${rightHtml}</ul></div><button type="button" class="check-answer-btn">Check Matches</button><div class="feedback hidden"></div></div>`;
@@ -358,11 +422,11 @@ export function renderPageHtml(options: {
   const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
   const blocksHtml = sortedBlocks
     .map((block) => {
-      if (block.category === "content") {
-        return renderContentBlock(block);
-      } else {
-        return renderInteractionBlock(block, scormRuntime?.gradingKeysByBlockId[block.id]);
-      }
+      const html =
+        block.category === "content"
+          ? renderContentBlock(block)
+          : renderInteractionBlock(block, scormRuntime?.gradingKeysByBlockId[block.id]);
+      return withBlockMarkers(html, block);
     })
     .filter(Boolean)
     .join("\n");
@@ -445,6 +509,8 @@ ${buildScormRuntimeScript(scormRuntime)}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="generator" content="${GENERATOR_ID}" />
+  <meta name="scormcraft-sidecar" content="scormcraft/course.json" />
   <title>${escapeHtml(pageTitle)} - ${escapeHtml(courseTitle)}</title>
   ${fontLink}
   <style>
