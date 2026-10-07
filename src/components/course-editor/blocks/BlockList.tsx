@@ -26,6 +26,12 @@ import {
   regenerateBlock,
 } from "@/lib/api";
 import { BlockEditor } from "./BlockEditor";
+import {
+  AUTHORABLE_CONTENT_BLOCK_TYPES,
+  BLOCK_TYPE_LABELS,
+  INTERACTION_BLOCK_TYPES,
+  isSystemBlockType,
+} from "@/types/course";
 import type { ContentBlockType, InteractionBlockType } from "@/types/course";
 
 interface SortableBlockProps {
@@ -86,27 +92,33 @@ function SortableBlock({
   );
 }
 
-const CONTENT_TYPES: { type: ContentBlockType; label: string }[] = [
-  { type: "text", label: "Text" },
-  { type: "heading", label: "Heading" },
-  { type: "image", label: "Image" },
-  { type: "video_embed", label: "Video" },
-  { type: "key_insight", label: "Key insight" },
-  { type: "key_point", label: "Key point" },
-  { type: "table", label: "Table" },
-  { type: "file_download", label: "File download" },
+const INTERACTION_MENU_ORDER: InteractionBlockType[] = [
+  "multiple_choice",
+  "true_false",
+  "drag_and_drop",
+  "matching",
+  "reflection",
+  "dialog_cards",
 ];
 
-const INTERACTION_TYPES: { type: InteractionBlockType; label: string }[] = [
-  { type: "multiple_choice", label: "Multiple choice" },
-  { type: "true_false", label: "True / False" },
-  { type: "drag_and_drop", label: "Drag & Drop" },
-  { type: "matching", label: "Matching" },
-  { type: "reflection", label: "Reflection" },
-  { type: "dialog_cards", label: "Dialog Cards" },
-];
+// Derived from the canonical registry in types/course.ts, so a new block type
+// never has to be added here as well. System types (embedded_html) are excluded
+// from AUTHORABLE_CONTENT_BLOCK_TYPES and so never appear in the menu.
+const CONTENT_TYPES: { type: ContentBlockType; label: string }[] =
+  AUTHORABLE_CONTENT_BLOCK_TYPES.map((type) => ({ type, label: BLOCK_TYPE_LABELS[type] }));
+
+const INTERACTION_TYPES: { type: InteractionBlockType; label: string }[] =
+  INTERACTION_MENU_ORDER.filter((t) => INTERACTION_BLOCK_TYPES.includes(t)).map((type) => ({
+    type,
+    label: BLOCK_TYPE_LABELS[type],
+  }));
 
 function getDefaultData(category: "content" | "interaction", type: string): Record<string, unknown> {
+  // Fail loudly if a refactor ever routes a system block type through the
+  // creation path: there is no valid default for a preserved-page reference.
+  if (isSystemBlockType(type)) {
+    throw new Error(`Block type '${type}' cannot be created from the editor.`);
+  }
   if (category === "content") {
     switch (type) {
       case "text": return { text: "" };

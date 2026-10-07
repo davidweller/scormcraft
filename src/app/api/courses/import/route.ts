@@ -7,7 +7,8 @@ import { analyzeCourseDocument, type ImportedCourseData } from "@/lib/ai-course-
 import { getOpenAIClient } from "@/lib/ai";
 import { uploadBlob, isBlobConfigured } from "@/lib/blob";
 
-export const maxDuration = 600; // section-by-section import can take several minutes
+// Must match the value for this path in vercel.json, which wins on Vercel.
+export const maxDuration = 300; // section-by-section import can take several minutes
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (above Vercel's 4.5MB body limit - self-hosted/local only)
 

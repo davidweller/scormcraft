@@ -113,6 +113,61 @@ function sanitizeRichText(html: string): string {
   return result + "</a>".repeat(openLinks);
 }
 
+/** FNV-1a, 32-bit. Stable across runs and platforms. */
+function fnv1a(input: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+/**
+ * Fisher-Yates over [0..n), driven by an xorshift32 PRNG seeded from `seed`.
+ * The same seed always yields the same permutation, which is what makes the
+ * export byte-reproducible and the matching shuffle reversible on import.
+ */
+export function seededShuffleIndices(n: number, seed: string): number[] {
+  const indices = Array.from({ length: n }, (_, i) => i);
+  let state = fnv1a(seed) || 0x9e3779b9;
+  const next = () => {
+    state ^= state << 13;
+    state >>>= 0;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    state >>>= 0;
+    return state;
+  };
+  for (let i = n - 1; i > 0; i--) {
+    const j = next() % (i + 1);
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
+/** Marker identifying packages this app produced. Read by the SCORM importer. */
+export const GENERATOR_ID = "scormcraft/1";
+
+/**
+ * Stamp `data-sc-*` attributes onto a rendered block's root element.
+ *
+ * Without these, reverse-parsing our own export means sniffing CSS classes,
+ * which is a heuristic. With them the importer's high-confidence path is exact.
+ * The attributes are injected into the existing root tag rather than added via
+ * a wrapper element, so the rendered DOM and CSS are unchanged.
+ */
+function withBlockMarkers(html: string, block: Block): string {
+  if (!html) return html;
+  const match = html.match(/^(\s*<[a-zA-Z][a-zA-Z0-9]*)/);
+  if (!match) return html;
+  const attrs =
+    ` data-sc-block="${escapeHtml(block.id)}"` +
+    ` data-sc-cat="${escapeHtml(block.category)}"` +
+    ` data-sc-type="${escapeHtml(block.type)}"`;
+  return match[1] + attrs + html.slice(match[1].length);
+}
+
 export function renderContentBlock(block: Block): string {
   const c = block.data || {};
   if (block.type === "text") {
@@ -173,6 +228,12 @@ export function renderContentBlock(block: Block): string {
     const meta = [typeLabel, formatFileSize(Number(c.size) || 0)].filter(Boolean).join(" · ");
     const icon = `<svg class="content-download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>`;
     return `<a class="content-download reveal" href="${escapeHtml(url)}" download="${escapeHtml(filename)}">${icon}<span class="content-download-text"><span class="content-download-label">${escapeHtml(label)}</span>${description ? `<span class="content-download-desc">${escapeHtml(description)}</span>` : ""}${meta ? `<span class="content-download-meta">${escapeHtml(meta)}</span>` : ""}</span></a>`;
+  }
+  if (block.type === "embedded_html") {
+    // Deliberately empty. A preserved page is not rendered INSIDE another page
+    // — it IS a page, emitted verbatim by build-package.ts. Falling through to
+    // the default below would be indistinguishable from a bug.
+    return "";
   }
   return "";
 }
@@ -240,12 +301,15 @@ export function renderInteractionBlock(
     const matchDataAttrs = gradingKey && gradingKey.type === "matching"
       ? ` data-scorm-graded="true" data-block-id="${escapeHtml(block.id)}" data-pair-count="${pairs.length}"`
       : ` data-pair-count="${pairs.length}"`;
-    const shuffledRight = [...pairs].sort(() => Math.random() - 0.5);
-    const rightIndexMap = shuffledRight.map(p => pairs.indexOf(p));
+    // Deterministic, seeded from the block id. A Math.random() shuffle made the
+    // export non-reproducible (so round-trip fixtures were impossible) and gave
+    // a learner a different order on every reload mid-attempt.
+    const rightIndexMap = seededShuffleIndices(pairs.length, block.id);
+    const shuffledRight = rightIndexMap.map((i) => pairs[i]);
     const leftHtml = pairs.map((p, i) => 
       `<li class="match-item match-left" data-index="${i}">${escapeHtml(String((p as { left: string }).left || ""))}</li>`
     ).join("");
-    const rightHtml = shuffledRight.map((p, i) => 
+    const rightHtml = shuffledRight.map((p, i) =>
       `<li class="match-item match-right" data-index="${rightIndexMap[i]}">${escapeHtml(String((p as { right: string }).right || ""))}</li>`
     ).join("");
     return `<div class="interaction matching reveal"${matchDataAttrs}${explanationAttr}><p class="question">${nl2br(question)}</p><p class="match-instruction">Click an item on the left, then click its match on the right.</p><div class="match-container"><ul class="match-column match-left-col">${leftHtml}</ul><svg class="match-lines" aria-hidden="true"></svg><ul class="match-column match-right-col">${rightHtml}</ul></div><button type="button" class="check-answer-btn">Check Matches</button><div class="feedback hidden"></div></div>`;
@@ -358,11 +422,11 @@ export function renderPageHtml(options: {
   const sortedBlocks = [...blocks].sort((a, b) => a.order - b.order);
   const blocksHtml = sortedBlocks
     .map((block) => {
-      if (block.category === "content") {
-        return renderContentBlock(block);
-      } else {
-        return renderInteractionBlock(block, scormRuntime?.gradingKeysByBlockId[block.id]);
-      }
+      const html =
+        block.category === "content"
+          ? renderContentBlock(block)
+          : renderInteractionBlock(block, scormRuntime?.gradingKeysByBlockId[block.id]);
+      return withBlockMarkers(html, block);
     })
     .filter(Boolean)
     .join("\n");
@@ -445,6 +509,8 @@ ${buildScormRuntimeScript(scormRuntime)}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="generator" content="${GENERATOR_ID}" />
+  <meta name="scormcraft-sidecar" content="scormcraft/course.json" />
   <title>${escapeHtml(pageTitle)} - ${escapeHtml(courseTitle)}</title>
   ${fontLink}
   <style>
@@ -596,6 +662,50 @@ function buildScormBodyDataAttrs(runtime?: ScormRuntimeOptions): string {
 
 function buildCheckAnswerScript(): string {
   return `
+// Shared by the graded interactions: saved attempts, feedback, and the Try again button.
+var scInteraction = (function() {
+  function saved(blockId) {
+    if (!blockId || typeof window.getSavedInteraction !== 'function') return null;
+    return window.getSavedInteraction(blockId);
+  }
+  function track(blockId, isCorrect, response) {
+    if (blockId && typeof window.trackInteractionAnswer === 'function') {
+      window.trackInteractionAnswer(blockId, isCorrect, response);
+    }
+  }
+  function showFeedback(feedback, isCorrect, titleText, explanation) {
+    var explanationHtml = explanation ? '<p class="feedback-explanation">' + explanation + '</p>' : '';
+    feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
+    feedback.innerHTML = '<p class="feedback-title">' + titleText + '</p>' + explanationHtml;
+  }
+  // Built here rather than in the markup, so packages exported before it existed pick it up
+  // when only their script is replaced.
+  function retryButton(el, btn, feedback, onReset) {
+    var retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'check-answer-btn retry-btn';
+    retry.textContent = 'Try again';
+    retry.style.display = 'none';
+    feedback.parentNode.insertBefore(retry, feedback.nextSibling);
+    retry.addEventListener('click', function() {
+      onReset();
+      el.classList.remove('checked');
+      feedback.className = 'feedback hidden';
+      feedback.innerHTML = '';
+      retry.style.display = 'none';
+      btn.style.display = '';
+      btn.disabled = false;
+    });
+    return {
+      show: function() {
+        btn.style.display = 'none';
+        retry.style.display = '';
+      }
+    };
+  }
+  return { saved: saved, track: track, showFeedback: showFeedback, retryButton: retryButton };
+})();
+
 (function() {
   function initCheckAnswers() {
     var interactions = document.querySelectorAll('.interaction.multiple-choice, .interaction.true-false');
@@ -603,7 +713,38 @@ function buildCheckAnswerScript(): string {
       var btn = el.querySelector('.check-answer-btn');
       var feedback = el.querySelector('.feedback');
       if (!btn || !feedback) return;
-      
+
+      var blockId = el.getAttribute('data-block-id');
+      var isMultipleChoice = el.classList.contains('multiple-choice');
+      var correctIdx = el.getAttribute('data-correct-index');
+      var correctVal = el.getAttribute('data-correct');
+      var explanation = el.getAttribute('data-explanation') || '';
+      var inputs = el.querySelectorAll('input[type="radio"]');
+      var optionItems = el.querySelectorAll('.option-item');
+
+      function isCorrectValue(value) {
+        return isMultipleChoice ? parseInt(value, 10) === parseInt(correctIdx, 10) : value === correctVal;
+      }
+
+      function showResult(value) {
+        var isCorrect = isCorrectValue(value);
+        el.classList.add('checked');
+        [].forEach.call(inputs, function(inp) { inp.disabled = true; });
+        [].forEach.call(optionItems, function(item) {
+          var itemValue = isMultipleChoice ? item.getAttribute('data-index') : item.getAttribute('data-value');
+          if (isCorrectValue(itemValue)) item.classList.add('correct-answer');
+          var itemInput = item.querySelector('input[type="radio"]');
+          if (itemInput && itemInput.checked && !isCorrect) item.classList.add('user-incorrect');
+        });
+        scInteraction.showFeedback(feedback, isCorrect, isCorrect ? 'Correct!' : 'Incorrect', explanation);
+        return isCorrect;
+      }
+
+      var retry = scInteraction.retryButton(el, btn, feedback, function() {
+        [].forEach.call(inputs, function(inp) { inp.disabled = false; inp.checked = false; });
+        [].forEach.call(optionItems, function(item) { item.classList.remove('correct-answer', 'user-incorrect'); });
+      });
+
       btn.addEventListener('click', function() {
         var selected = el.querySelector('input[type="radio"]:checked');
         if (!selected) {
@@ -611,56 +752,19 @@ function buildCheckAnswerScript(): string {
           feedback.innerHTML = '<p class="feedback-title">Please select an answer first.</p>';
           return;
         }
-        
-        var isMultipleChoice = el.classList.contains('multiple-choice');
-        var correctIdx = el.getAttribute('data-correct-index');
-        var correctVal = el.getAttribute('data-correct');
-        var explanation = el.getAttribute('data-explanation') || '';
-        var selectedValue = selected.value;
-        var isCorrect;
-        
-        if (isMultipleChoice) {
-          isCorrect = parseInt(selectedValue, 10) === parseInt(correctIdx, 10);
-        } else {
-          isCorrect = selectedValue === correctVal;
-        }
-        
-        el.classList.add('checked');
-        btn.disabled = true;
-        var inputs = el.querySelectorAll('input[type="radio"]');
-        [].forEach.call(inputs, function(inp) { inp.disabled = true; });
-        
-        var titleText = isCorrect ? 'Correct!' : 'Incorrect';
-        var explanationHtml = explanation ? '<p class="feedback-explanation">' + explanation + '</p>' : '';
-        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.innerHTML = '<p class="feedback-title">' + titleText + '</p>' + explanationHtml;
-        
-        if (isMultipleChoice) {
-          var optionItems = el.querySelectorAll('.option-item');
-          [].forEach.call(optionItems, function(item) {
-            var idx = item.getAttribute('data-index');
-            if (parseInt(idx, 10) === parseInt(correctIdx, 10)) {
-              item.classList.add('correct-answer');
-            }
-            var itemInput = item.querySelector('input[type="radio"]');
-            if (itemInput && itemInput.checked && !isCorrect) {
-              item.classList.add('user-incorrect');
-            }
-          });
-        } else {
-          var optionItems = el.querySelectorAll('.option-item');
-          [].forEach.call(optionItems, function(item) {
-            var val = item.getAttribute('data-value');
-            if (val === correctVal) {
-              item.classList.add('correct-answer');
-            }
-            var itemInput = item.querySelector('input[type="radio"]');
-            if (itemInput && itemInput.checked && !isCorrect) {
-              item.classList.add('user-incorrect');
-            }
-          });
-        }
+        var isCorrect = showResult(selected.value);
+        retry.show();
+        scInteraction.track(blockId, isCorrect, selected.value);
       });
+
+      var saved = scInteraction.saved(blockId);
+      if (saved && typeof saved.response === 'string') {
+        [].forEach.call(inputs, function(inp) { inp.checked = inp.value === saved.response; });
+        if (el.querySelector('input[type="radio"]:checked')) {
+          showResult(saved.response);
+          retry.show();
+        }
+      }
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initCheckAnswers);
@@ -737,12 +841,14 @@ function buildCheckAnswerScript(): string {
         // Touch support
         var touchY = 0;
         item.addEventListener('touchstart', function(e) {
+          if (el.classList.contains('checked')) return;
           touchY = e.touches[0].clientY;
           draggedItem = this;
           this.classList.add('dragging');
         }, {passive: true});
         
         item.addEventListener('touchmove', function(e) {
+          if (!draggedItem) return;
           e.preventDefault();
           var y = e.touches[0].clientY;
           var target = document.elementFromPoint(e.touches[0].clientX, y);
@@ -754,6 +860,7 @@ function buildCheckAnswerScript(): string {
         });
         
         item.addEventListener('touchend', function() {
+          if (!draggedItem) return;
           this.classList.remove('dragging');
           var overItem = dragList.querySelector('.drag-item.drag-over');
           if (overItem && draggedItem) {
@@ -771,42 +878,53 @@ function buildCheckAnswerScript(): string {
         });
       });
       
-      btn.addEventListener('click', function() {
-        var correctOrderStr = el.getAttribute('data-correct-order');
-        var explanation = el.getAttribute('data-explanation') || '';
-        var correctOrder;
-        try { correctOrder = JSON.parse(correctOrderStr); } catch(err) { correctOrder = []; }
-        
-        var currentItems = dragList.querySelectorAll('.drag-item');
-        var currentOrder = Array.prototype.slice.call(currentItems).map(function(item) {
+      var blockId = el.getAttribute('data-block-id');
+      var explanation = el.getAttribute('data-explanation') || '';
+
+      function currentOrder() {
+        return Array.prototype.slice.call(dragList.querySelectorAll('.drag-item')).map(function(item) {
           return parseInt(item.getAttribute('data-index'), 10);
         });
-        
-        var isCorrect = correctOrder.length === currentOrder.length && 
-          correctOrder.every(function(v, i) { return v === currentOrder[i]; });
-        
+      }
+
+      function showResult() {
+        var order = currentOrder();
+        var isCorrect = correctForShuffle.length === order.length &&
+          correctForShuffle.every(function(v, i) { return v === order[i]; });
         el.classList.add('checked');
-        btn.disabled = true;
-        
-        [].forEach.call(currentItems, function(item, idx) {
+        [].forEach.call(dragList.querySelectorAll('.drag-item'), function(item, idx) {
           item.setAttribute('draggable', 'false');
           var itemIndex = parseInt(item.getAttribute('data-index'), 10);
-          if (correctOrder[idx] === itemIndex) {
-            item.classList.add('correct-position');
-          } else {
-            item.classList.add('incorrect-position');
-          }
+          item.classList.add(correctForShuffle[idx] === itemIndex ? 'correct-position' : 'incorrect-position');
         });
-        
-        var titleText = isCorrect ? 'Correct!' : 'Incorrect - The items are not in the right order.';
-        var explanationHtml = explanation ? '<p class="feedback-explanation">' + explanation + '</p>' : '';
-        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.innerHTML = '<p class="feedback-title">' + titleText + '</p>' + explanationHtml;
-        
-        if (typeof window.trackInteractionAnswer === 'function') {
-          window.trackInteractionAnswer(el.getAttribute('data-block-id'), isCorrect);
-        }
+        scInteraction.showFeedback(feedback, isCorrect,
+          isCorrect ? 'Correct!' : 'Incorrect - The items are not in the right order.', explanation);
+        return isCorrect;
+      }
+
+      var retry = scInteraction.retryButton(el, btn, feedback, function() {
+        [].forEach.call(dragList.querySelectorAll('.drag-item'), function(item) {
+          item.setAttribute('draggable', 'true');
+          item.classList.remove('correct-position', 'incorrect-position');
+        });
       });
+
+      btn.addEventListener('click', function() {
+        var isCorrect = showResult();
+        retry.show();
+        scInteraction.track(blockId, isCorrect, currentOrder());
+      });
+
+      // Put the items back in the order the learner checked, then show that result.
+      var saved = scInteraction.saved(blockId);
+      if (saved && Array.isArray(saved.response) && saved.response.length === items.length) {
+        saved.response.forEach(function(index) {
+          var item = dragList.querySelector('.drag-item[data-index="' + index + '"]');
+          if (item) dragList.appendChild(item);
+        });
+        showResult();
+        retry.show();
+      }
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initDragAndDrop);
@@ -851,6 +969,7 @@ function buildCheckAnswerScript(): string {
             line.setAttribute('y2', rightRect.top + rightRect.height/2 - containerRect.top);
             line.setAttribute('data-left', leftIdx);
             line.setAttribute('data-right', rightIdx);
+            if (el.classList.contains('checked')) line.classList.add(leftIdx === rightIdx ? 'correct' : 'incorrect');
             svg.appendChild(line);
           }
         }
@@ -903,19 +1022,17 @@ function buildCheckAnswerScript(): string {
         });
       });
       
-      btn.addEventListener('click', function() {
-        var explanation = el.getAttribute('data-explanation') || '';
+      var blockId = el.getAttribute('data-block-id');
+      var explanation = el.getAttribute('data-explanation') || '';
+
+      function showResult() {
         var correctCount = 0;
-        
         for (var leftIdx in matches) {
           if (matches[leftIdx] === leftIdx) correctCount++;
         }
-        
         var isCorrect = correctCount === pairCount && Object.keys(matches).length === pairCount;
-        
+
         el.classList.add('checked');
-        btn.disabled = true;
-        
         for (var leftIdx in matches) {
           var rightIdx = matches[leftIdx];
           var leftItem = leftCol.querySelector('[data-index="' + leftIdx + '"]');
@@ -933,17 +1050,48 @@ function buildCheckAnswerScript(): string {
           }
         }
         
-        var titleText = isCorrect ? 'Correct!' : 'Incorrect - Some matches are wrong.';
-        var explanationHtml = explanation ? '<p class="feedback-explanation">' + explanation + '</p>' : '';
-        feedback.className = 'feedback ' + (isCorrect ? 'correct' : 'incorrect');
-        feedback.innerHTML = '<p class="feedback-title">' + titleText + '</p>' + explanationHtml;
-        
-        if (typeof window.trackInteractionAnswer === 'function') {
-          window.trackInteractionAnswer(el.getAttribute('data-block-id'), isCorrect);
-        }
+        scInteraction.showFeedback(feedback, isCorrect,
+          isCorrect ? 'Correct!' : 'Incorrect - Some matches are wrong.', explanation);
+        return isCorrect;
+      }
+
+      var retry = scInteraction.retryButton(el, btn, feedback, function() {
+        matches = {};
+        selectedLeft = null;
+        [].forEach.call(el.querySelectorAll('.match-item'), function(item) {
+          item.classList.remove('selected', 'matched', 'correct-match', 'incorrect-match');
+        });
+        updateLines();
       });
-      
+
+      btn.addEventListener('click', function() {
+        var isCorrect = showResult();
+        retry.show();
+        var response = {};
+        for (var k in matches) response[k] = matches[k];
+        scInteraction.track(blockId, isCorrect, response);
+      });
+
+      // Redraw the pairs the learner checked, then show that result.
+      var saved = scInteraction.saved(blockId);
+      if (saved && saved.response && typeof saved.response === 'object' && !Array.isArray(saved.response)) {
+        for (var savedLeft in saved.response) {
+          var savedRight = String(saved.response[savedLeft]);
+          var savedLeftItem = leftCol.querySelector('[data-index="' + savedLeft + '"]');
+          var savedRightItem = rightCol.querySelector('[data-index="' + savedRight + '"]');
+          if (!savedLeftItem || !savedRightItem) continue;
+          matches[savedLeft] = savedRight;
+          savedLeftItem.classList.add('matched');
+          savedRightItem.classList.add('matched');
+        }
+        updateLines();
+        showResult();
+        retry.show();
+      }
+
       window.addEventListener('resize', updateLines);
+      // Lines drawn before fonts and images load sit in the wrong place.
+      window.addEventListener('load', updateLines);
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initMatching);
@@ -1015,54 +1163,40 @@ function buildScormRuntimeScript(runtime?: ScormRuntimeOptions): string {
     SCORM.init();
     SCORM.setLessonStatus('incomplete');
     var sd = SCORM.getSuspendData();
-    var state = { viewed: [], score: 0, answers: {} };
+    var state = { viewed: [], score: 0, answers: {}, responses: {} };
     try { if (sd) state = JSON.parse(sd); } catch (e) {}
     if (!state.viewed) state.viewed = [];
     if (state.viewed.indexOf(pageIndex) === -1) state.viewed.push(pageIndex);
     state.viewed = state.viewed.filter(function(v, i, a) { return a.indexOf(v) === i; });
     if (!state.answers) state.answers = {};
+    if (!state.responses) state.responses = {};
     SCORM.setSuspendData(JSON.stringify(state));
     SCORM.setScore(state.score || 0, 0, totalScoreMax);
-    var graded = document.querySelectorAll('[data-scorm-graded="true"]');
-    [].forEach.call(graded, function(el) {
-      var inputs = el.querySelectorAll('input[type="radio"]');
-      var correctVal = el.getAttribute('data-correct');
-      var correctIdx = el.getAttribute('data-correct-index');
-      var isCorrect = correctVal !== null && correctVal !== ''
-        ? function(v) { return v === correctVal; }
-        : function(v) { return parseInt(v, 10) === parseInt(correctIdx, 10); };
-      [].forEach.call(inputs, function(inp) {
-        inp.addEventListener('change', function() {
-          if (typeof SCORM === 'undefined') return;
-          var sd2 = SCORM.getSuspendData();
-          var s2 = { viewed: state.viewed, score: 0, answers: state.answers || {} };
-          try { if (sd2) s2 = JSON.parse(sd2); } catch (e) {}
-          var key = el.getAttribute('data-block-id');
-          s2.answers[key] = isCorrect(this.value);
-          var n = 0;
-          for (var k in s2.answers) if (s2.answers[k]) n++;
-          s2.score = n;
-          state.score = n;
-          state.answers = s2.answers;
-          SCORM.setSuspendData(JSON.stringify(s2));
-          SCORM.setScore(n, 0, totalScoreMax);
-        });
-      });
-    });
     window.addEventListener('beforeunload', function() { SCORM.setLessonStatus('completed'); });
-    
-    // Global function to track answers from drag-and-drop and matching interactions
-    window.trackInteractionAnswer = function(blockId, isCorrect) {
+
+    // The learner's last checked attempt, so a reload can redraw it. Older packages
+    // saved only answers (right/wrong), so response can be missing.
+    window.getSavedInteraction = function(blockId) {
+      if (!blockId || !Object.prototype.hasOwnProperty.call(state.answers, blockId)) return null;
+      return { correct: !!state.answers[blockId], response: state.responses[blockId] };
+    };
+
+    // Records a checked answer. Called on Check, so a retry replaces the earlier result.
+    window.trackInteractionAnswer = function(blockId, isCorrect, response) {
       if (typeof SCORM === 'undefined' || !blockId) return;
       var sd2 = SCORM.getSuspendData();
-      var s2 = { viewed: state.viewed, score: 0, answers: state.answers || {} };
+      var s2 = { viewed: state.viewed, score: 0, answers: state.answers || {}, responses: state.responses || {} };
       try { if (sd2) s2 = JSON.parse(sd2); } catch (err) {}
+      if (!s2.answers) s2.answers = {};
+      if (!s2.responses) s2.responses = {};
       s2.answers[blockId] = isCorrect;
+      if (response !== undefined) s2.responses[blockId] = response;
       var n = 0;
       for (var k in s2.answers) if (s2.answers[k]) n++;
       s2.score = n;
       state.score = n;
       state.answers = s2.answers;
+      state.responses = s2.responses;
       SCORM.setSuspendData(JSON.stringify(s2));
       SCORM.setScore(n, 0, totalScoreMax);
     };

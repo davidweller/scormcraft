@@ -10,7 +10,8 @@ export type ContentBlockType =
   | "key_insight"
   | "key_point"
   | "table"
-  | "file_download";
+  | "file_download"
+  | "embedded_html";
 export type InteractionBlockType =
   | "multiple_choice"
   | "true_false"
@@ -20,6 +21,66 @@ export type InteractionBlockType =
   | "dialog_cards";
 
 export type BlockType = ContentBlockType | InteractionBlockType;
+
+/**
+ * Canonical block-type registry. Previously these lists were duplicated in
+ * BlockList.tsx, the blocks POST route and this file; a type added to one and
+ * missed in another is accepted in one place and rejected in the next.
+ * Everything that needs to enumerate block types imports from here.
+ */
+export const CONTENT_BLOCK_TYPES: readonly ContentBlockType[] = [
+  "text",
+  "heading",
+  "image",
+  "video_embed",
+  "key_insight",
+  "key_point",
+  "table",
+  "file_download",
+  "embedded_html",
+];
+
+export const INTERACTION_BLOCK_TYPES: readonly InteractionBlockType[] = [
+  "multiple_choice",
+  "true_false",
+  "reflection",
+  "drag_and_drop",
+  "matching",
+  "dialog_cards",
+];
+
+/**
+ * Types the import pipeline may create but a user may not author by hand.
+ * `embedded_html` carries a reference to a preserved page bundle; there is
+ * nothing a creation form could produce that would be valid.
+ */
+export const SYSTEM_BLOCK_TYPES: readonly BlockType[] = ["embedded_html"];
+
+export function isSystemBlockType(type: string): boolean {
+  return SYSTEM_BLOCK_TYPES.includes(type as BlockType);
+}
+
+/** Content types offered in the editor's "add block" menu. */
+export const AUTHORABLE_CONTENT_BLOCK_TYPES: readonly ContentBlockType[] =
+  CONTENT_BLOCK_TYPES.filter((t) => !isSystemBlockType(t));
+
+export const BLOCK_TYPE_LABELS: Record<BlockType, string> = {
+  text: "Text",
+  heading: "Heading",
+  image: "Image",
+  video_embed: "Video",
+  key_insight: "Key insight",
+  key_point: "Key point",
+  table: "Table",
+  file_download: "File download",
+  embedded_html: "Preserved page",
+  multiple_choice: "Multiple choice",
+  true_false: "True / False",
+  reflection: "Reflection",
+  drag_and_drop: "Drag & Drop",
+  matching: "Matching",
+  dialog_cards: "Dialog Cards",
+};
 
 export type ContentData = Record<string, unknown>;
 

@@ -14,6 +14,7 @@ export async function POST(
       format = "scorm",
       includeAnswers = true,
       version = "1.2",
+      includeSidecar = true,
       completionRules,
       scoring,
       lmsSettings,
@@ -21,6 +22,7 @@ export async function POST(
       format?: "scorm" | "docx";
       includeAnswers?: boolean;
       version?: "1.2" | "2004";
+      includeSidecar?: boolean;
       completionRules?: unknown;
       scoring?: unknown;
       lmsSettings?: unknown;
@@ -51,7 +53,9 @@ export async function POST(
       );
     }
 
-    const zipBuffer = await buildScorm12Zip(course as Parameters<typeof buildScorm12Zip>[0]);
+    const zipBuffer = await buildScorm12Zip(course as Parameters<typeof buildScorm12Zip>[0], {
+      includeSidecar: includeSidecar !== false,
+    });
     const filename = `scorm-${safeTitle}.zip`;
 
     return new NextResponse(new Uint8Array(zipBuffer), {
