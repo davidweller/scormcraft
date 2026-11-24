@@ -14,7 +14,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { findBlobByPathname, isBlobConfigured } from "@/lib/blob";
+import { fetchStored, findBlobByPathname, isBlobConfigured } from "@/lib/blob";
 import {
   ScormImportUnsupportedError,
   importScormPackage,
@@ -59,7 +59,7 @@ async function readPackageFromBlob(body: unknown): Promise<PackageInput> {
     throw new BadRequest("No uploaded package found for that import token.", 404);
   }
 
-  const res = await fetch(blob.url, { signal: AbortSignal.timeout(120_000) });
+  const res = await fetchStored(blob.url, { signal: AbortSignal.timeout(120_000) });
   if (!res.ok) {
     throw new BadRequest(`Could not read the uploaded package (HTTP ${res.status}).`, 502);
   }

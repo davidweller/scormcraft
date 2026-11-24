@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { fetchStored } from "@/lib/blob";
 
 /**
  * Serves an uploaded media file as an attachment under its original filename.
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   const media = await prisma.media.findFirst({ where: { url } });
   if (!media) return NextResponse.json({ error: "File not found" }, { status: 404 });
 
-  const res = await fetch(media.url, { signal: AbortSignal.timeout(15000) }).catch(() => null);
+  const res = await fetchStored(media.url, { signal: AbortSignal.timeout(15000) }).catch(() => null);
   if (!res?.ok || !res.body) {
     return NextResponse.json({ error: "Could not fetch file" }, { status: 502 });
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { fetchStored } from "@/lib/blob";
 
 const WORDS_PER_MINUTE = 200;
 
@@ -141,7 +142,7 @@ export async function GET(
 
     const linkCheckPromises = brokenLinks.slice(0, 20).map(async (item) => {
       try {
-        const res = await fetch(item.url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+        const res = await fetchStored(item.url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
         return { ...item, ok: res.ok };
       } catch {
         return { ...item, ok: false };

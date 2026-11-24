@@ -23,6 +23,7 @@ import {
   type ParagraphChild,
 } from "docx";
 import type { BlockForExport, CourseForExport } from "@/lib/scorm/build-package";
+import { fetchStored } from "@/lib/blob";
 
 type DocChild = Paragraph | Table;
 
@@ -331,8 +332,8 @@ async function loadImage(url: string): Promise<LoadedImage | null> {
     const dataUrl = url.match(/^data:image\/[a-zA-Z0-9.+-]+;base64,(.+)$/);
     if (dataUrl) {
       buf = Buffer.from(dataUrl[1], "base64");
-    } else if (/^https?:\/\//i.test(url)) {
-      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    } else if (/^https?:\/\//i.test(url) || url.startsWith("/files/")) {
+      const res = await fetchStored(url, { signal: AbortSignal.timeout(15000) });
       if (!res.ok) return null;
       buf = Buffer.from(await res.arrayBuffer());
     } else {

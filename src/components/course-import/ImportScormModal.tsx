@@ -122,14 +122,28 @@ export default function ImportScormModal({
       try {
         setStep("uploading");
         setUploadBytes(file.size);
-        await upload(`imports/scorm/${importToken}/package.zip`, file, {
-          access: "public",
-          handleUploadUrl: "/api/courses/import-scorm/upload-url",
-          contentType: file.type || "application/zip",
-          // No onUploadProgress: it arrived in @vercel/blob 0.26 and this
-          // project is pinned to 0.24 for the existing put/del/list callers.
-          // The upload step shows an indeterminate spinner instead.
-        });
+        if (process.env.NEXT_PUBLIC_STORAGE === "local") {
+          // Desktop app: stream the package into local storage, same pathname.
+          const put = await fetch(`/api/courses/import-scorm/upload-local?token=${importToken}`, {
+            method: "PUT",
+            headers: { "Content-Type": file.type || "application/zip" },
+            body: file,
+            signal: controller.signal,
+          });
+          if (!put.ok) {
+            const data = (await put.json().catch(() => ({}))) as { error?: string };
+            throw new Error(data.error || "Upload failed.");
+          }
+        } else {
+          await upload(`imports/scorm/${importToken}/package.zip`, file, {
+            access: "public",
+            handleUploadUrl: "/api/courses/import-scorm/upload-url",
+            contentType: file.type || "application/zip",
+            // No onUploadProgress: it arrived in @vercel/blob 0.26 and this
+            // project is pinned to 0.24 for the existing put/del/list callers.
+            // The upload step shows an indeterminate spinner instead.
+          });
+        }
         analyzeInit = {
           method: "POST",
           headers: { "Content-Type": "application/json" },

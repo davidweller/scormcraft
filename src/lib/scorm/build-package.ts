@@ -16,6 +16,7 @@ import {
   type SidecarPage,
 } from "./sidecar";
 import { APP_VERSION } from "@/lib/app-version";
+import { fetchStored } from "@/lib/blob";
 
 /**
  * A bundled asset. The extra metadata beyond localPath exists so the sidecar
@@ -68,7 +69,7 @@ async function fetchAndBundleImage(
       };
     }
 
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const res = await fetchStored(url, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) return null;
 
     const buf = Buffer.from(await res.arrayBuffer());
@@ -105,7 +106,7 @@ async function fetchAndBundleVideo(
   contentFolder: JSZip
 ): Promise<VideoMapping | null> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    const res = await fetchStored(url, { signal: AbortSignal.timeout(30000) });
     if (!res.ok) return null;
     const contentType = (res.headers.get("content-type") || "").toLowerCase();
     if (!contentType.includes("video/mp4") && !url.toLowerCase().includes(".mp4")) return null;
@@ -130,7 +131,7 @@ async function fetchAndBundleFile(
   contentFolder: JSZip
 ): Promise<{ mimeType: string; size: number } | null> {
   try {
-    const res = await fetch(file.url, { signal: AbortSignal.timeout(15000) });
+    const res = await fetchStored(file.url, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     contentFolder.file(file.localPath, buf);
@@ -410,7 +411,7 @@ export async function buildScorm12Zip(
     brandConfig?.logoUrl && typeof brandConfig.logoUrl === "string" ? brandConfig.logoUrl : null;
   if (logoUrl) {
     try {
-      const res = await fetch(logoUrl, { signal: AbortSignal.timeout(10000) });
+      const res = await fetchStored(logoUrl, { signal: AbortSignal.timeout(10000) });
       if (res.ok) {
         const buf = Buffer.from(await res.arrayBuffer());
         const ext = logoUrl.includes(".png") ? "png" : logoUrl.includes(".svg") ? "svg" : "png";

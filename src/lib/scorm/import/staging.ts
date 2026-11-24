@@ -14,7 +14,7 @@
  *     lost on restart. Stated plainly rather than papered over.
  */
 
-import { deleteBlob, findBlobByPathname, isBlobConfigured, uploadBlob } from "@/lib/blob";
+import { deleteBlob, fetchStored, findBlobByPathname, isBlobConfigured, uploadBlob } from "@/lib/blob";
 import type { ImportedCourseDraft, LossReport, ScormImportCounts } from "./types";
 
 export const STAGING_PREFIX = "imports/scorm";
@@ -115,7 +115,7 @@ export async function readStagedImport(importToken: string): Promise<StagedImpor
   try {
     const blob = await findBlobByPathname(stagingPath(importToken));
     if (!blob) return null;
-    const res = await fetch(blob.url, {
+    const res = await fetchStored(blob.url, {
       signal: AbortSignal.timeout(15000),
       cache: "no-store",
     });
