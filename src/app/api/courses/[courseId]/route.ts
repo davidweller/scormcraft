@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { mergeCourseSettings } from "@/lib/course-settings";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(
@@ -77,7 +78,11 @@ export async function PATCH(
     if (tone !== undefined) data.tone = typeof tone === "string" ? tone.trim() || null : undefined;
     if (complianceLevel !== undefined) data.complianceLevel = typeof complianceLevel === "string" ? complianceLevel.trim() || null : undefined;
     if (brandConfig !== undefined) data.brandConfig = brandConfig as Prisma.InputJsonValue;
-    if (settings !== undefined) data.settings = settings as Prisma.InputJsonValue;
+    if (settings !== undefined) {
+      // Merge, don't replace: the settings page sends only the keys it changed.
+      const current = await prisma.course.findUnique({ where: { id: courseId }, select: { settings: true } });
+      data.settings = mergeCourseSettings(current?.settings, settings) as Prisma.InputJsonValue;
+    }
     if (ilos !== undefined) data.ilos = ilos as Prisma.InputJsonValue;
     if (assessmentPlan !== undefined) data.assessmentPlan = assessmentPlan as Prisma.InputJsonValue;
     if (interactionsReviewedAt !== undefined) data.interactionsReviewedAt = new Date(interactionsReviewedAt);

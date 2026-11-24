@@ -9,6 +9,7 @@ import {
   DocumentArrowDownIcon,
   FolderOpenIcon,
   SparklesIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 type CourseItem = {
@@ -95,6 +96,13 @@ export default function Home() {
               >
                 <FolderOpenIcon className="h-4 w-4" />
                 View all courses
+              </Link>
+              <Link
+                href="/settings"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              >
+                <Cog6ToothIcon className="h-4 w-4" />
+                Settings
               </Link>
             </div>
           </div>

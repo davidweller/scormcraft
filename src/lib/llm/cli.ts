@@ -7,9 +7,9 @@
  * through a plan's limits in parallel.
  */
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { delimiter, join } from "node:path";
 import { LlmTimeoutError } from "./types";
 
 const MAX_CONCURRENT = 2;
@@ -50,24 +50,48 @@ export class CliNotFoundError extends Error {
 }
 
 /**
- * Run a CLI. `shell: true` on Windows so npm's .cmd shims resolve; arguments
- * are fixed flags chosen here, never user text (that goes on stdin).
+ * Find a command on PATH. Windows: honours PATHEXT, so `claude` finds
+ * claude.exe (native installer) and `codex` finds codex.cmd (npm shim).
+ */
+export function resolveExecutable(command: string): string | null {
+  const dirs = (process.env.PATH ?? "").split(delimiter).filter(Boolean);
+  const exts =
+    process.platform === "win32"
+      ? (process.env.PATHEXT ?? ".EXE;.CMD;.BAT;.COM").split(";").filter(Boolean)
+      : [""];
+  for (const dir of dirs) {
+    for (const ext of exts) {
+      const full = join(dir, command + ext.toLowerCase());
+      if (existsSync(full) && statSync(full).isFile()) return full;
+    }
+  }
+  return null;
+}
+
+/**
+ * Run a CLI. Arguments are fixed flags and temp-file paths chosen here, never
+ * user text (that goes on stdin). An .exe runs directly; an npm .cmd shim has
+ * to go through cmd.exe, so it gets one pre-quoted command line.
  */
 export async function runCli(
   command: string,
   args: string[],
   opts: { stdin?: string; timeoutMs: number; queue?: boolean }
 ): Promise<CliResult> {
+  const exe = resolveExecutable(command);
+  if (!exe) throw new CliNotFoundError(command);
   if (opts.queue !== false) await acquire();
   try {
     return await new Promise<CliResult>((resolve, reject) => {
-      const quoted = process.platform === "win32" ? args.map(winQuote) : args;
-      const child = spawn(command, quoted, {
+      const viaShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(exe);
+      const spawnOpts = {
         cwd: cliWorkDir(),
-        shell: process.platform === "win32",
         windowsHide: true,
         env: { ...process.env, NO_COLOR: "1" },
-      });
+      };
+      const child = viaShell
+        ? spawn([exe, ...args].map(winQuote).join(" "), { ...spawnOpts, shell: true })
+        : spawn(exe, args, spawnOpts);
       let stdout = "";
       let stderr = "";
       const timer = setTimeout(() => {
@@ -82,15 +106,6 @@ export async function runCli(
       });
       child.on("close", (code) => {
         clearTimeout(timer);
-        // cmd.exe reports a missing command as exit 1 / 9009 with this text.
-        if (
-          process.platform === "win32" &&
-          code !== 0 &&
-          /is not recognized as an internal or external command/i.test(stderr)
-        ) {
-          reject(new CliNotFoundError(command));
-          return;
-        }
         resolve({ code, stdout, stderr });
       });
       if (opts.stdin != null) child.stdin.end(opts.stdin, "utf8");
@@ -108,14 +123,21 @@ function winQuote(arg: string): string {
   return `"${arg.replace(/"/g, '""')}"`;
 }
 
-/** Run a command and open whatever it opens (a browser sign-in), without waiting on output. */
-export function launchDetached(command: string, args: string[]): void {
-  const child = spawn(command, args, {
-    cwd: cliWorkDir(),
-    shell: process.platform === "win32",
-    detached: true,
-    stdio: "ignore",
-    windowsHide: false,
-  });
+/**
+ * Open a visible terminal running a fixed command (sign-in or install), so
+ * the user can follow its prompts. Only called with constants from this app.
+ */
+export function openTerminal(title: string, commandLine: string): void {
+  if (process.platform === "win32") {
+    const child = spawn("cmd.exe", ["/c", "start", `"${title}"`, "cmd.exe", "/k", commandLine], {
+      cwd: cliWorkDir(),
+      detached: true,
+      stdio: "ignore",
+      windowsVerbatimArguments: true,
+    });
+    child.unref();
+    return;
+  }
+  const child = spawn("sh", ["-c", commandLine], { cwd: cliWorkDir(), detached: true, stdio: "ignore" });
   child.unref();
 }

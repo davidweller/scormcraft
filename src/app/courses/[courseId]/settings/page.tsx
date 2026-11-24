@@ -4,8 +4,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 interface CourseSettings {
+  aiProvider?: string;
   apiKeys?: {
     openai?: string;
+    anthropic?: string;
     gemini?: string;
   };
 }
@@ -31,6 +33,10 @@ export default function SettingsPage() {
   const [newApiKey, setNewApiKey] = useState("");
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
   const [newGeminiKey, setNewGeminiKey] = useState("");
+  const [hasAnthropicKey, setHasAnthropicKey] = useState(false);
+  const [newAnthropicKey, setNewAnthropicKey] = useState("");
+  const [aiProvider, setAiProvider] = useState("");
+  const [providers, setProviders] = useState<{ id: string; label: string }[]>([]);
   const [deleting, setDeleting] = useState(false);
 
   const loadCourse = useCallback(async () => {
@@ -52,6 +58,10 @@ export default function SettingsPage() {
       const settings = data.settings as CourseSettings | null;
       setHasApiKey(Boolean(settings?.apiKeys?.openai));
       setHasGeminiKey(Boolean(settings?.apiKeys?.gemini));
+      setHasAnthropicKey(Boolean(settings?.apiKeys?.anthropic));
+      setAiProvider(settings?.aiProvider ?? "");
+      const appSettings = await fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (appSettings?.providers) setProviders(appSettings.providers);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -84,9 +94,14 @@ export default function SettingsPage() {
       if (newGeminiKey.trim()) {
         apiKeys.gemini = newGeminiKey.trim();
       }
-      if (Object.keys(apiKeys).length > 0) {
-        payload.settings = { apiKeys };
+      if (newAnthropicKey.trim()) {
+        apiKeys.anthropic = newAnthropicKey.trim();
       }
+      // The server merges settings, so only changed parts are sent.
+      payload.settings = {
+        aiProvider: aiProvider || null,
+        ...(Object.keys(apiKeys).length > 0 && { apiKeys }),
+      };
       const res = await fetch(`/api/courses/${courseId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -104,6 +119,10 @@ export default function SettingsPage() {
         setHasGeminiKey(true);
         setNewGeminiKey("");
       }
+      if (newAnthropicKey.trim()) {
+        setHasAnthropicKey(true);
+        setNewAnthropicKey("");
+      }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
@@ -113,8 +132,8 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleClearApiKey(keyType: "openai" | "gemini") {
-    const keyName = keyType === "openai" ? "OpenAI" : "Gemini";
+  async function handleClearApiKey(keyType: "openai" | "anthropic" | "gemini") {
+    const keyName = { openai: "OpenAI", anthropic: "Anthropic", gemini: "Gemini" }[keyType];
     if (!confirm(`Remove the stored ${keyName} API key?`)) return;
     setSaving(true);
     setError(null);
@@ -130,11 +149,9 @@ export default function SettingsPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Failed to clear key");
       }
-      if (keyType === "openai") {
-        setHasApiKey(false);
-      } else {
-        setHasGeminiKey(false);
-      }
+      if (keyType === "openai") setHasApiKey(false);
+      else if (keyType === "anthropic") setHasAnthropicKey(false);
+      else setHasGeminiKey(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to clear key");
     } finally {
@@ -321,6 +338,35 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-4">
+          <h2 className="text-lg font-semibold">AI provider</h2>
+          <div>
+            <label htmlFor="aiProvider" className="block text-sm font-medium text-gray-700">
+              Provider for this course
+            </label>
+            <select
+              id="aiProvider"
+              value={aiProvider}
+              onChange={(e) => setAiProvider(e.target.value)}
+              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            >
+              <option value="">Use the app default</option>
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">
+              Set the app default, subscriptions and shared keys in{" "}
+              <a href="/settings" className="text-blue-600 hover:underline">
+                Settings
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-4">
           <h2 className="text-lg font-semibold">API keys (bring your own)</h2>
           <p className="text-sm text-gray-500">
             Optionally provide your own API keys for AI generation.
@@ -355,6 +401,40 @@ export default function SettingsPage() {
                 />
                 <p className="mt-1 text-xs text-gray-400">
                   Stored securely. Leave blank to use the default key.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <h3 className="text-sm font-medium text-gray-900">Anthropic (content generation with Claude)</h3>
+            {hasAnthropicKey ? (
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-green-700">Anthropic key configured</span>
+                <button
+                  type="button"
+                  onClick={() => handleClearApiKey("anthropic")}
+                  disabled={saving}
+                  className="text-sm text-red-600 hover:underline disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="anthropicKey" className="block text-sm font-medium text-gray-700">
+                  Anthropic API key
+                </label>
+                <input
+                  id="anthropicKey"
+                  type="password"
+                  value={newAnthropicKey}
+                  onChange={(e) => setNewAnthropicKey(e.target.value)}
+                  placeholder="sk-ant-…"
+                  className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Used when this course&apos;s provider is the Anthropic API. Leave blank to use the app key.
                 </p>
               </div>
             )}
