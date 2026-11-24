@@ -7,16 +7,16 @@
  * the delete.
  */
 
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+import { JsonNull, prisma } from "@/lib/db";
 import type { ImportedCourseDraft } from "./types";
 
 /** Interactive transactions default to 5s, which a 300-page import will exceed. */
 const TRANSACTION_TIMEOUT_MS = 120_000;
 
-function jsonOrNull(value: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull {
-  if (value === null || value === undefined) return Prisma.JsonNull;
-  if (Array.isArray(value) && value.length === 0) return Prisma.JsonNull;
+function jsonOrNull(value: unknown): Prisma.InputJsonValue | typeof JsonNull {
+  if (value === null || value === undefined) return JsonNull;
+  if (Array.isArray(value) && value.length === 0) return JsonNull;
   return value as Prisma.InputJsonValue;
 }
 

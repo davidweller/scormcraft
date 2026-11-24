@@ -36,3 +36,12 @@ prisma/migrations/**/migration_lock.toml
 # Local build output and large media (added 2026-09-28)
 .tmp/
 tsconfig.tsbuildinfo
+
+# Project map (generated, local only)
+.project-map/
+
+# Desktop build
+dist/
+.desktop-data/
+prisma/sqlite/schema.prisma
+src/generated/

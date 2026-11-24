@@ -4,16 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "npm run db:generate && next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate && tsx scripts/make-sqlite-schema.ts && prisma generate --schema prisma/sqlite/schema.prisma",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "gc:scorm-imports": "tsx scripts/gc-scorm-imports.ts"
+    "gc:scorm-imports": "tsx scripts/gc-scorm-imports.ts",
+    "db:migrate:desktop": "tsx scripts/make-sqlite-schema.ts && prisma migrate dev --schema prisma/sqlite/schema.prisma"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

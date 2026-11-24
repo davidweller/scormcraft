@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+import { JsonNull, prisma } from "@/lib/db";
 
 interface BlueprintModule {
   title: string;
@@ -37,12 +37,12 @@ export async function POST(
         data: {
           ...(description !== undefined && { overview: description.trim() || null }),
           ...(targetWordCount !== undefined && { targetWordCount: typeof targetWordCount === "number" ? targetWordCount : null }),
-          ...(ilos !== undefined && { ilos: Array.isArray(ilos) ? (ilos as Prisma.InputJsonValue) : Prisma.JsonNull }),
+          ...(ilos !== undefined && { ilos: Array.isArray(ilos) ? (ilos as Prisma.InputJsonValue) : JsonNull }),
           ...(assessmentPlan !== undefined && {
             assessmentPlan:
               typeof assessmentPlan === "string" && assessmentPlan.trim()
                 ? assessmentPlan.trim()
-                : Prisma.JsonNull,
+                : JsonNull,
           }),
         },
       });

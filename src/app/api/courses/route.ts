@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+import { JsonNull, prisma } from "@/lib/db";
 
 function dbErrorMessage(e: unknown): string {
   const msg = e instanceof Error ? e.message : (e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : "");
@@ -62,8 +62,8 @@ export async function POST(request: Request) {
         targetWordCount: typeof targetWordCount === "number" ? targetWordCount : null,
         tone: tone?.trim() ?? null,
         complianceLevel: complianceLevel?.trim() ?? null,
-        brandConfig: brandConfig != null ? (brandConfig as Prisma.InputJsonValue) : Prisma.JsonNull,
-        settings: settings != null ? (settings as Prisma.InputJsonValue) : Prisma.JsonNull,
+        brandConfig: brandConfig != null ? (brandConfig as Prisma.InputJsonValue) : JsonNull,
+        settings: settings != null ? (settings as Prisma.InputJsonValue) : JsonNull,
       },
     });
     return NextResponse.json(course);

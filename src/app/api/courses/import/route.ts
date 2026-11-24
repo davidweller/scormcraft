@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
+import { JsonNull, prisma } from "@/lib/db";
 import { parseDocx, formatDocumentForAI } from "@/lib/docx-parser";
 import { isMarkdownFile, prepareMarkdownForImport } from "@/lib/markdown-parser";
 import { analyzeCourseDocument, type ImportedCourseData } from "@/lib/ai-course-import";
@@ -169,8 +169,8 @@ async function createCourseFromImport(data: ImportedCourseData) {
       overview: data.overview || null,
       audience: data.audience || null,
       tone: data.tone || null,
-      ilos: data.ilos.length > 0 ? (data.ilos as Prisma.InputJsonValue) : Prisma.JsonNull,
-      assessmentPlan: data.assessmentPlan ? (data.assessmentPlan as Prisma.InputJsonValue) : Prisma.JsonNull,
+      ilos: data.ilos.length > 0 ? (data.ilos as Prisma.InputJsonValue) : JsonNull,
+      assessmentPlan: data.assessmentPlan ? (data.assessmentPlan as Prisma.InputJsonValue) : JsonNull,
     },
   });
 
