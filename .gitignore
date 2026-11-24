@@ -45,3 +45,4 @@ dist/
 .desktop-data/
 prisma/sqlite/schema.prisma
 src/generated/
+.next-desktop/

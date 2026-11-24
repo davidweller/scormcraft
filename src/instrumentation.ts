@@ -1,13 +1,13 @@
 /**
  * Next.js startup hook. On the desktop build (SQLite), bring the local
  * database up to date before the first request is served.
+ *
+ * The NEXT_RUNTIME check must wrap the import directly so the edge bundle
+ * drops it (the runner uses node:fs).
  */
 export async function register() {
-  if (process.env.NEXT_RUNTIME !== "nodejs") return;
-  if (!(process.env.DATABASE_URL ?? "").startsWith("file:")) return;
-
-  const { join } = await import("node:path");
-  const { applyDesktopMigrations } = await import("@/lib/desktop/migrate");
-  const dir = process.env.MIGRATIONS_DIR || join(process.cwd(), "prisma", "sqlite", "migrations");
-  await applyDesktopMigrations(dir);
+  if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { runDesktopStartup } = await import("./lib/desktop/startup");
+    await runDesktopStartup();
+  }
 }

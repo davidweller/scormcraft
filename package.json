@@ -14,7 +14,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gc:scorm-imports": "tsx scripts/gc-scorm-imports.ts",
-    "db:migrate:desktop": "tsx scripts/make-sqlite-schema.ts && prisma migrate dev --schema prisma/sqlite/schema.prisma"
+    "db:migrate:desktop": "tsx scripts/make-sqlite-schema.ts && prisma migrate dev --schema prisma/sqlite/schema.prisma",
+    "desktop:dev": "tsx scripts/make-sqlite-schema.ts && prisma generate --schema prisma/sqlite/schema.prisma && concurrently -k -n next,app \"node electron/dev-server.js\" \"electron .\"",
+    "desktop:build": "node scripts/build-desktop.mjs",
+    "desktop:build:win": "node scripts/build-desktop.mjs --win"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -52,6 +55,10 @@
     "@types/react-dom": "^18.3.1",
     "@types/sanitize-html": "^2.16.2",
     "@vitest/coverage-v8": "^2.1.9",
+    "concurrently": "^10.0.7",
+    "cross-env": "^10.1.0",
+    "electron": "^41.10.7",
+    "electron-builder": "^26.18.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.18",
     "postcss": "^8.4.47",
@@ -59,6 +66,9 @@
     "tailwindcss": "^3.4.15",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
-    "vitest": "^2.1.9"
-  }
+    "vitest": "^2.1.9",
+    "wait-on": "^9.5.1"
+  },
+  "main": "electron/main.js",
+  "productName": "SCORMcraft"
 }
