@@ -3,7 +3,8 @@
  * pass an LlmProvider from getLlm() in src/lib/llm.
  */
 
-import { parseJsonObject, type LlmProvider } from "@/lib/llm";
+import { parseJsonObject } from "@/lib/llm/json";
+import type { LlmProvider } from "@/lib/llm/types";
 
 export interface BlueprintContext {
   title: string;

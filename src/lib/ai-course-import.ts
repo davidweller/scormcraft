@@ -7,7 +7,8 @@
  * AI call cannot hang for 10+ minutes generating 65k tokens of JSON.
  */
 
-import { LlmTimeoutError, parseJsonObject, type LlmProvider } from "@/lib/llm";
+import { parseJsonObject } from "@/lib/llm/json";
+import { LlmTimeoutError, type LlmProvider } from "@/lib/llm/types";
 import type {
   ContentBlockType,
   InteractionBlockType,
