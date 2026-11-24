@@ -11,7 +11,9 @@
  */
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { prisma } from "@/lib/db";
+import { prisma as defaultClient } from "@/lib/db";
+
+type Raw = Pick<typeof defaultClient, "$queryRawUnsafe" | "$executeRawUnsafe" | "$transaction">;
 
 export function splitSql(sql: string): string[] {
   return sql
@@ -23,7 +25,7 @@ export function splitSql(sql: string): string[] {
     .filter(Boolean);
 }
 
-async function tableExists(name: string): Promise<boolean> {
+async function tableExists(prisma: Raw, name: string): Promise<boolean> {
   const rows = await prisma.$queryRawUnsafe<{ name: string }[]>(
     "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
     name
@@ -31,7 +33,11 @@ async function tableExists(name: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-export async function applyDesktopMigrations(migrationsDir: string): Promise<string[]> {
+/** `client` defaults to the app's; scripts/neon-to-local.ts passes its own SQLite client. */
+export async function applyDesktopMigrations(
+  migrationsDir: string,
+  prisma: Raw = defaultClient
+): Promise<string[]> {
   if (!existsSync(migrationsDir)) {
     throw new Error(`Migrations folder not found: ${migrationsDir}`);
   }
@@ -45,7 +51,7 @@ export async function applyDesktopMigrations(migrationsDir: string): Promise<str
       (r) => r.name
     )
   );
-  if (await tableExists("_prisma_migrations")) {
+  if (await tableExists(prisma, "_prisma_migrations")) {
     const rows = await prisma.$queryRawUnsafe<{ migration_name: string }[]>(
       "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NOT NULL"
     );
