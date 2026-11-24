@@ -1,4 +1,5 @@
 import { Prisma as PgPrisma, PrismaClient as PgPrismaClient } from "@prisma/client";
+import { join } from "node:path";
 
 /**
  * One Prisma client, chosen by DATABASE_URL.
@@ -15,9 +16,17 @@ import { Prisma as PgPrisma, PrismaClient as PgPrismaClient } from "@prisma/clie
 
 const IS_SQLITE = (process.env.DATABASE_URL ?? "").startsWith("file:");
 
+/**
+ * Loaded from disk at runtime, never bundled: webpack's file tracer can't
+ * follow the generated client and the build fails if it tries. The standalone
+ * build copies the folder in via outputFileTracingIncludes (next.config.mjs),
+ * and the server's cwd is the project (dev) or standalone root (packaged).
+ */
 function loadSqlite(): { PrismaClient: typeof PgPrismaClient; Prisma: typeof PgPrisma } {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  return require("../generated/prisma-sqlite");
+  const dir =
+    process.env.PRISMA_SQLITE_CLIENT_DIR || join(process.cwd(), "src", "generated", "prisma-sqlite");
+  const nodeRequire = eval("require") as NodeRequire;
+  return nodeRequire(dir);
 }
 
 const active = IS_SQLITE ? loadSqlite() : { PrismaClient: PgPrismaClient, Prisma: PgPrisma };
