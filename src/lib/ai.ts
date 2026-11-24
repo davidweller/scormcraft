@@ -1,23 +1,9 @@
 /**
- * AI service for blueprint and content generation. Uses OpenAI with optional BYO key.
+ * AI service for blueprint and content generation. Provider-agnostic: callers
+ * pass an LlmProvider from getLlm() in src/lib/llm.
  */
 
-import OpenAI from "openai";
-
-export function getOpenAIClient(
-  apiKey?: string | null,
-  options?: { timeout?: number; maxRetries?: number }
-): OpenAI | null {
-  const key = apiKey?.trim() || process.env.OPENAI_API_KEY?.trim();
-  if (!key) return null;
-  return new OpenAI({
-    apiKey: key,
-    timeout: options?.timeout ?? 60000, // Default 60s, can be overridden
-    // OpenAI retries timed-out requests by default (maxRetries=2), which can
-    // stretch a 10-minute timeout into ~15+ minutes of apparent hang.
-    maxRetries: options?.maxRetries ?? 2,
-  });
-}
+import { parseJsonObject, type LlmProvider } from "@/lib/llm";
 
 export interface BlueprintContext {
   title: string;
@@ -44,7 +30,7 @@ export interface BlueprintData {
 }
 
 export async function generateBlueprintSection(
-  client: OpenAI,
+  llm: LlmProvider,
   context: BlueprintContext,
   section: BlueprintSection,
   currentBlueprint?: BlueprintData
@@ -59,90 +45,48 @@ ${context.complianceLevel ? `Compliance: ${context.complianceLevel}` : ""}
 `;
 
   if (section === "description") {
-    const res = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: basePrompt + 'Respond with a JSON object: { "description": "2-4 sentence course description" }' },
-        { role: "user", content: "Generate the course description." },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await llm.completeJson({
+      system: basePrompt + 'Respond with a JSON object: { "description": "2-4 sentence course description" }',
+      user: "Generate the course description.",
     });
-    const text = res.choices[0]?.message?.content;
-    if (!text) throw new Error("Empty AI response");
-    return JSON.parse(text) as { description: string };
+    return parseJsonObject(text) as { description: string };
   }
 
   if (section === "modules") {
-    const res = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: basePrompt + 'Respond with a JSON object: { "modules": [ { "title": "Module 1 title" }, ... ] }. Suggest 3-6 modules.' },
-        { role: "user", content: "Generate module titles for this course." },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await llm.completeJson({
+      system: basePrompt + 'Respond with a JSON object: { "modules": [ { "title": "Module 1 title" }, ... ] }. Suggest 3-6 modules.',
+      user: "Generate module titles for this course.",
     });
-    const text = res.choices[0]?.message?.content;
-    if (!text) throw new Error("Empty AI response");
-    return JSON.parse(text) as { modules: { title: string }[] };
+    return parseJsonObject(text) as { modules: { title: string }[] };
   }
 
   if (section === "lessons") {
     const modules = currentBlueprint?.modules ?? [];
     const moduleTitles = modules.map((m) => m.title).join(", ");
-    const res = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            basePrompt +
-            `Existing modules: ${moduleTitles}. Respond with a JSON object: { "lessons": [ { "moduleIndex": 0, "title": "Lesson title" }, ... ] }. moduleIndex is 0-based. Give 2-5 lessons per module.`,
-        },
-        { role: "user", content: "Generate lesson titles for each module." },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await llm.completeJson({
+      system: basePrompt +
+        `Existing modules: ${moduleTitles}. Respond with a JSON object: { "lessons": [ { "moduleIndex": 0, "title": "Lesson title" }, ... ] }. moduleIndex is 0-based. Give 2-5 lessons per module.`,
+      user: "Generate lesson titles for each module.",
     });
-    const text = res.choices[0]?.message?.content;
-    if (!text) throw new Error("Empty AI response");
-    return JSON.parse(text) as { lessons: { moduleIndex: number; title: string }[] };
+    return parseJsonObject(text) as { lessons: { moduleIndex: number; title: string }[] };
   }
 
   if (section === "ilos") {
-    const res = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            basePrompt +
-            'Respond with a JSON object: { "ilos": [ "By the end of this course learners will...", ... ] }. Provide 3-6 clear learning outcomes.',
-        },
-        { role: "user", content: "Generate learning outcomes (ILOs)." },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await llm.completeJson({
+      system: basePrompt +
+        'Respond with a JSON object: { "ilos": [ "By the end of this course learners will...", ... ] }. Provide 3-6 clear learning outcomes.',
+      user: "Generate learning outcomes (ILOs).",
     });
-    const text = res.choices[0]?.message?.content;
-    if (!text) throw new Error("Empty AI response");
-    return JSON.parse(text) as { ilos: string[] };
+    return parseJsonObject(text) as { ilos: string[] };
   }
 
   if (section === "assessmentPlan") {
-    const res = await client.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            basePrompt +
-            'Respond with a JSON object: { "assessmentPlan": "2-5 sentence description of how and where assessment will occur (quizzes, knowledge checks, final quiz, etc.)." }',
-        },
-        { role: "user", content: "Generate the assessment plan." },
-      ],
-      response_format: { type: "json_object" },
+    const { text } = await llm.completeJson({
+      system: basePrompt +
+        'Respond with a JSON object: { "assessmentPlan": "2-5 sentence description of how and where assessment will occur (quizzes, knowledge checks, final quiz, etc.)." }',
+      user: "Generate the assessment plan.",
     });
-    const text = res.choices[0]?.message?.content;
-    if (!text) throw new Error("Empty AI response");
-    return JSON.parse(text) as { assessmentPlan: string };
+    return parseJsonObject(text) as { assessmentPlan: string };
   }
 
   throw new Error(`Unknown section: ${section}`);
@@ -185,7 +129,7 @@ export interface GeneratedInteractionsResult {
 }
 
 export async function generateLessonContent(
-  client: OpenAI,
+  llm: LlmProvider,
   lessonTitle: string,
   context: LessonContentContext
 ): Promise<GeneratedLessonContent> {
@@ -225,17 +169,11 @@ IMPORTANT HTML formatting rules for text blocks:
 
 Use "text" and "heading" only for contentBlocks. Keep content aligned to the lesson and ILOs.${context.targetWordCountPerLesson ? ` Aim for approximately ${context.targetWordCountPerLesson} words total in the text content.` : ""}`;
 
-  const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You output only valid JSON. No markdown code fences, no explanation." },
-      { role: "user", content: prompt },
-    ],
-    response_format: { type: "json_object" },
+  const { text } = await llm.completeJson({
+    system: "You output only valid JSON. No markdown code fences, no explanation.",
+    user: prompt,
   });
-  const text = res.choices[0]?.message?.content;
-  if (!text) throw new Error("Empty AI response");
-  const parsed = JSON.parse(text) as GeneratedLessonContent;
+  const parsed = parseJsonObject(text) as GeneratedLessonContent;
   if (!Array.isArray(parsed.contentBlocks)) parsed.contentBlocks = [];
   return parsed;
 }
@@ -265,7 +203,7 @@ export interface InteractionGenerationOptions {
 }
 
 export async function generateInteractions(
-  client: OpenAI,
+  llm: LlmProvider,
   context: InteractionGenerationContext,
   options: InteractionGenerationOptions
 ): Promise<GeneratedInteractionsResult> {
@@ -314,17 +252,11 @@ Respond with a JSON object:
   ]
 }`;
 
-  const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You output only valid JSON. No markdown code fences, no explanation." },
-      { role: "user", content: prompt },
-    ],
-    response_format: { type: "json_object" },
+  const { text } = await llm.completeJson({
+    system: "You output only valid JSON. No markdown code fences, no explanation.",
+    user: prompt,
   });
-  const text = res.choices[0]?.message?.content;
-  if (!text) throw new Error("Empty AI response");
-  const parsed = JSON.parse(text) as GeneratedInteractionsResult;
+  const parsed = parseJsonObject(text) as GeneratedInteractionsResult;
   if (!Array.isArray(parsed.interactionBlocks)) parsed.interactionBlocks = [];
   
   const validTypes = new Set(options.types);
@@ -347,7 +279,7 @@ export interface RegenerateContentBlockContext {
 }
 
 export async function regenerateContentBlock(
-  client: OpenAI,
+  llm: LlmProvider,
   context: RegenerateContentBlockContext
 ): Promise<{ content: Record<string, unknown> }> {
   const { blockType, currentContent, pageContent, lessonTitle, courseTitle, tone } = context;
@@ -383,18 +315,11 @@ ${typeInstruction}
 Respond with a JSON object: { "content": { ... } }
 The content should be fresh and different from what might already exist, while remaining relevant to the lesson.`;
 
-  const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You output only valid JSON. No markdown code fences, no explanation." },
-      { role: "user", content: prompt },
-    ],
-    response_format: { type: "json_object" },
+  const { text } = await llm.completeJson({
+    system: "You output only valid JSON. No markdown code fences, no explanation.",
+    user: prompt,
   });
-
-  const text = res.choices[0]?.message?.content;
-  if (!text) throw new Error("Empty AI response");
-  return JSON.parse(text) as { content: Record<string, unknown> };
+  return parseJsonObject(text) as { content: Record<string, unknown> };
 }
 
 export interface RegenerateInteractionBlockContext {
@@ -408,7 +333,7 @@ export interface RegenerateInteractionBlockContext {
 }
 
 export async function regenerateInteractionBlock(
-  client: OpenAI,
+  llm: LlmProvider,
   context: RegenerateInteractionBlockContext
 ): Promise<{ config: Record<string, unknown> }> {
   const { blockType, pageContent, lessonTitle, courseTitle, tone, includeExplanation = true } = context;
@@ -456,16 +381,9 @@ ${typeInstruction}
 Respond with a JSON object: { "config": { ... } }
 The question should be fresh and different, while testing key concepts from the lesson.`;
 
-  const res = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You output only valid JSON. No markdown code fences, no explanation." },
-      { role: "user", content: prompt },
-    ],
-    response_format: { type: "json_object" },
+  const { text } = await llm.completeJson({
+    system: "You output only valid JSON. No markdown code fences, no explanation.",
+    user: prompt,
   });
-
-  const text = res.choices[0]?.message?.content;
-  if (!text) throw new Error("Empty AI response");
-  return JSON.parse(text) as { config: Record<string, unknown> };
+  return parseJsonObject(text) as { config: Record<string, unknown> };
 }

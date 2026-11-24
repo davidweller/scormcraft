@@ -1,18 +1,19 @@
 /**
  * Gemini API client for AI image generation using Nano Banana 2 (Gemini 3.1 Flash Image).
- * Supports both environment variable and per-course BYO API keys.
+ * Key order: per-course BYO key, then the app Settings key, then GEMINI_API_KEY.
  */
 
 import { GoogleGenAI } from "@google/genai";
+import { resolveApiKey } from "@/lib/settings";
 
 export function getGeminiClient(apiKey?: string | null): GoogleGenAI | null {
-  const key = apiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+  const key = resolveApiKey("gemini", apiKey);
   if (!key) return null;
   return new GoogleGenAI({ apiKey: key });
 }
 
 export function isGeminiConfigured(apiKey?: string | null): boolean {
-  return Boolean(apiKey?.trim() || process.env.GEMINI_API_KEY?.trim());
+  return Boolean(resolveApiKey("gemini", apiKey));
 }
 
 export interface ImageGenerationOptions {

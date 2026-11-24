@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { courseAiSettings, getLlm, type LlmProvider } from "@/lib/llm";
 import {
-  getOpenAIClient,
   generateBlueprintSection,
   type BlueprintSection,
   type BlueprintData,
@@ -25,12 +25,12 @@ export async function POST(
       return NextResponse.json({ error: "section is required" }, { status: 400 });
     }
 
-    const settings = course.settings as { apiKeys?: { openai?: string } } | null;
-    const apiKey = settings?.apiKeys?.openai ?? null;
-    const client = getOpenAIClient(apiKey);
-    if (!client) {
+    let llm: LlmProvider;
+    try {
+      llm = await getLlm(courseAiSettings(course.settings));
+    } catch (e) {
       return NextResponse.json(
-        { error: "No OpenAI API key. Add OPENAI_API_KEY in .env or use Bring your own key in course settings." },
+        { error: e instanceof Error ? e.message : "No AI provider is set up." },
         { status: 400 }
       );
     }
@@ -45,7 +45,7 @@ export async function POST(
     };
 
     const result = await generateBlueprintSection(
-      client,
+      llm,
       context,
       section,
       currentBlueprint

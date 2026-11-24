@@ -1,12 +1,13 @@
 /**
  * AI-powered course import from DOCX documents.
- * Uses OpenAI to analyze document content and extract course structure.
+ * Uses the configured AI provider (src/lib/llm) to analyze document content
+ * and extract course structure.
  *
  * Large docs are split on Module headings and analyzed per-section so a single
- * OpenAI call cannot hang for 10+ minutes generating 65k tokens of JSON.
+ * AI call cannot hang for 10+ minutes generating 65k tokens of JSON.
  */
 
-import OpenAI from "openai";
+import { LlmTimeoutError, parseJsonObject, type LlmProvider } from "@/lib/llm";
 import type {
   ContentBlockType,
   InteractionBlockType,
@@ -18,7 +19,6 @@ import type {
   DialogCardsConfig,
 } from "@/types/course";
 
-const IMPORT_MODEL = process.env.OPENAI_IMPORT_MODEL || "gpt-5.2";
 /** Soft cap for a single section completion — keeps per-call latency bounded. */
 const SECTION_MAX_OUTPUT_TOKENS = 16384;
 const METADATA_MAX_OUTPUT_TOKENS = 4096;
@@ -120,14 +120,8 @@ ${BLOCK_TYPES_PROMPT}
 Do not invent modules or lessons — only return the blocks array for this section.
 IMPORTANT: The section title becomes the page title automatically. Do NOT create a heading block that repeats the section title (e.g. "Module 1: ..."). Start with the first real content after that title (e.g. "Module Overview").`;
 
-function tokenParams(maxTokens: number): Record<string, number> {
-  if (IMPORT_MODEL.startsWith("gpt-5")) {
-    return { max_completion_tokens: maxTokens };
-  }
-  return { max_tokens: maxTokens };
-}
-
 function isTimeoutError(error: unknown): boolean {
+  if (error instanceof LlmTimeoutError) return true;
   if (!error || typeof error !== "object") return false;
   const e = error as { name?: string; message?: string; code?: string };
   if (e.name === "APIConnectionTimeoutError") return true;
@@ -230,7 +224,7 @@ function moduleFromSection(title: string, blocks: ImportedBlock[]): ImportedModu
 }
 
 async function extractCourseMetadata(
-  client: OpenAI,
+  llm: LlmProvider,
   documentContent: string,
   moduleTitles: string[]
 ): Promise<Pick<ImportedCourseData, "title" | "overview" | "audience" | "tone" | "ilos" | "assessmentPlan">> {
@@ -242,21 +236,15 @@ async function extractCourseMetadata(
 
   console.log(`[Import] Extracting metadata (${head.length} chars)...`);
   const startTime = Date.now();
-  const response = await client.chat.completions.create({
-    model: IMPORT_MODEL,
-    messages: [
-      { role: "system", content: METADATA_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Extract course metadata from this document.${titlesHint}\n\n${head}`,
-      },
-    ],
-    response_format: { type: "json_object" },
-    ...tokenParams(METADATA_MAX_OUTPUT_TOKENS),
+  const { text } = await llm.completeJson({
+    tier: "import",
+    label: "metadata",
+    system: METADATA_SYSTEM_PROMPT,
+    user: `Extract course metadata from this document.${titlesHint}\n\n${head}`,
+    maxOutputTokens: METADATA_MAX_OUTPUT_TOKENS,
   });
   console.log(`[Import] Metadata done in ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
 
-  const text = response.choices[0]?.message?.content;
   if (!text) {
     return {
       title: "Imported Course",
@@ -269,7 +257,7 @@ async function extractCourseMetadata(
   }
 
   try {
-    const parsed = JSON.parse(text) as Partial<ImportedCourseData>;
+    const parsed = parseJsonObject<Partial<ImportedCourseData>>(text);
     return {
       title: typeof parsed.title === "string" && parsed.title.trim() ? parsed.title.trim() : "Imported Course",
       overview: typeof parsed.overview === "string" ? parsed.overview : "",
@@ -293,7 +281,7 @@ async function extractCourseMetadata(
 }
 
 async function extractSectionBlocks(
-  client: OpenAI,
+  llm: LlmProvider,
   section: DocumentSection,
   index: number,
   total: number
@@ -304,32 +292,26 @@ async function extractSectionBlocks(
   );
   const startTime = Date.now();
 
-  const response = await client.chat.completions.create({
-    model: IMPORT_MODEL,
-    messages: [
-      { role: "system", content: SECTION_SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Extract blocks for section "${section.title}". Do not include a heading for that title — it is already the page title.\n\n${sectionBody}`,
-      },
-    ],
-    response_format: { type: "json_object" },
-    ...tokenParams(SECTION_MAX_OUTPUT_TOKENS),
+  const { text, truncated } = await llm.completeJson({
+    tier: "import",
+    label: `section ${index + 1}`,
+    system: SECTION_SYSTEM_PROMPT,
+    user: `Extract blocks for section "${section.title}". Do not include a heading for that title — it is already the page title.\n\n${sectionBody}`,
+    maxOutputTokens: SECTION_MAX_OUTPUT_TOKENS,
   });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-  const text = response.choices[0]?.message?.content;
   if (!text) {
     console.warn(`[Import] Section ${index + 1} empty response after ${elapsed}s`);
     return [];
   }
 
   console.log(
-    `[Import] Section ${index + 1} done in ${elapsed}s (${text.length} chars, finish_reason=${response.choices[0]?.finish_reason})`
+    `[Import] Section ${index + 1} done in ${elapsed}s (${text.length} chars, truncated=${truncated})`
   );
 
   try {
-    const parsed = JSON.parse(text) as { blocks?: ImportedBlock[] };
+    const parsed = parseJsonObject<{ blocks?: ImportedBlock[] }>(text);
     return Array.isArray(parsed.blocks) ? parsed.blocks : [];
   } catch (e) {
     const parseError = e instanceof Error ? e.message : "Unknown parse error";
@@ -338,7 +320,7 @@ async function extractSectionBlocks(
 }
 
 export async function analyzeCourseDocument(
-  client: OpenAI,
+  llm: LlmProvider,
   documentContent: string
 ): Promise<ImportedCourseData> {
   const startTime = Date.now();
@@ -348,19 +330,19 @@ export async function analyzeCourseDocument(
     .map((s) => s.title);
 
   console.log(
-    `[Import] Analyzing document (${documentContent.length} chars) with model: ${IMPORT_MODEL}`
+    `[Import] Analyzing document (${documentContent.length} chars) with ${llm.label}`
   );
   console.log(
     `[Import] Split into ${sections.length} section(s): ${sections.map((s) => s.title).join(" | ")}`
   );
 
   try {
-    const metadata = await extractCourseMetadata(client, documentContent, moduleTitles);
+    const metadata = await extractCourseMetadata(llm, documentContent, moduleTitles);
 
     const modules: ImportedModule[] = [];
     for (let i = 0; i < sections.length; i++) {
       const section = sections[i];
-      const blocks = await extractSectionBlocks(client, section, i, sections.length);
+      const blocks = await extractSectionBlocks(llm, section, i, sections.length);
       modules.push(moduleFromSection(section.title, blocks));
     }
 
@@ -379,7 +361,7 @@ export async function analyzeCourseDocument(
   } catch (e) {
     if (isTimeoutError(e)) {
       throw new Error(
-        "Document analysis timed out while calling OpenAI. Large modules are processed one at a time — retry, or split the Word document into smaller files."
+        `Document analysis timed out while calling ${llm.label}. Large modules are processed one at a time — retry, or split the Word document into smaller files.`
       );
     }
     throw e;

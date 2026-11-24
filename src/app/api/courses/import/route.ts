@@ -4,7 +4,7 @@ import { JsonNull, prisma } from "@/lib/db";
 import { parseDocx, formatDocumentForAI } from "@/lib/docx-parser";
 import { isMarkdownFile, prepareMarkdownForImport } from "@/lib/markdown-parser";
 import { analyzeCourseDocument, type ImportedCourseData } from "@/lib/ai-course-import";
-import { getOpenAIClient } from "@/lib/ai";
+import { getLlm, type LlmProvider } from "@/lib/llm";
 import { uploadBlob, isBlobConfigured } from "@/lib/blob";
 
 // Must match the value for this path in vercel.json, which wins on Vercel.
@@ -62,12 +62,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Per-section analysis: fail a stuck OpenAI call after 3 minutes (no retries —
-    // the SDK's default maxRetries=2 turns a 10-minute timeout into ~15+ minutes).
-    const client = getOpenAIClient(apiKey, { timeout: 180000, maxRetries: 0 });
-    if (!client) {
+    // A pasted key is treated as an OpenAI key, as before; otherwise the
+    // app's provider choice applies. Import calls use the provider's long
+    // "import" timeouts with no retries (see src/lib/llm).
+    let llm: LlmProvider;
+    try {
+      llm = await getLlm(apiKey?.trim() ? { aiProvider: "openai-api", apiKeys: { openai: apiKey } } : null);
+    } catch (e) {
       return NextResponse.json(
-        { error: "OpenAI API key not configured. Add OPENAI_API_KEY to .env or provide your own key." },
+        { error: e instanceof Error ? e.message : "No AI provider is set up." },
         { status: 503 }
       );
     }
@@ -81,7 +84,7 @@ export async function POST(request: Request) {
       documentContent = await prepareDocxForImport(file);
     }
 
-    const importedData = await analyzeCourseDocument(client, documentContent);
+    const importedData = await analyzeCourseDocument(llm, documentContent);
 
     return NextResponse.json({ preview: importedData });
   } catch (e) {

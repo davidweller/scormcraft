@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { getOpenAIClient, generateLessonContent } from "@/lib/ai";
+import { generateLessonContent } from "@/lib/ai";
+import { courseAiSettings, getLlm, type LlmProvider } from "@/lib/llm";
 
 export async function generatePagesForLesson(courseId: string, lessonId: string): Promise<{ success: true; pageId: string } | { success: false; error: string }> {
   const course = await prisma.course.findUnique({
@@ -34,14 +35,11 @@ export async function generatePagesForLesson(courseId: string, lessonId: string)
   });
   if (!lesson) return { success: false, error: "Lesson not found" };
 
-  const settings = course.settings as { apiKeys?: { openai?: string } } | null;
-  const apiKey = settings?.apiKeys?.openai ?? null;
-  const client = getOpenAIClient(apiKey);
-  if (!client) {
-    return {
-      success: false,
-      error: "No OpenAI API key. Add OPENAI_API_KEY in .env or use Bring your own key in course settings.",
-    };
+  let llm: LlmProvider;
+  try {
+    llm = await getLlm(courseAiSettings(course.settings));
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "No AI provider is set up." };
   }
 
   const ilos = Array.isArray(course.ilos)
@@ -59,7 +57,7 @@ export async function generatePagesForLesson(courseId: string, lessonId: string)
   };
   let generated: Awaited<ReturnType<typeof generateLessonContent>>;
   try {
-    generated = await generateLessonContent(client, lesson.title, context);
+    generated = await generateLessonContent(llm, lesson.title, context);
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : "AI generation failed" };
   }

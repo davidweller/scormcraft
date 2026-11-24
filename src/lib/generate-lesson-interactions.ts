@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { getOpenAIClient, generateInteractions } from "@/lib/ai";
+import { generateInteractions } from "@/lib/ai";
+import { courseAiSettings, getLlm, type LlmProvider } from "@/lib/llm";
 import type { InteractionBlockType } from "@/types/course";
 
 export interface GenerateInteractionsOptions {
@@ -67,14 +68,11 @@ export async function generateInteractionsForLesson(
     return { success: false, error: "Lesson has no text content to base interactions on" };
   }
 
-  const settings = course.settings as { apiKeys?: { openai?: string } } | null;
-  const apiKey = settings?.apiKeys?.openai ?? null;
-  const client = getOpenAIClient(apiKey);
-  if (!client) {
-    return {
-      success: false,
-      error: "No OpenAI API key. Add OPENAI_API_KEY in .env or use Bring your own key in course settings.",
-    };
+  let llm: LlmProvider;
+  try {
+    llm = await getLlm(courseAiSettings(course.settings));
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : "No AI provider is set up." };
   }
 
   const ilos = Array.isArray(course.ilos)
@@ -92,7 +90,7 @@ export async function generateInteractionsForLesson(
 
   let generated: Awaited<ReturnType<typeof generateInteractions>>;
   try {
-    generated = await generateInteractions(client, context, {
+    generated = await generateInteractions(llm, context, {
       types: options.types as (
         | "reflection"
         | "multiple_choice"

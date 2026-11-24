@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { getOpenAIClient, regenerateContentBlock, regenerateInteractionBlock } from "@/lib/ai";
+import { regenerateContentBlock, regenerateInteractionBlock } from "@/lib/ai";
+import { courseAiSettings, getLlm, type LlmProvider } from "@/lib/llm";
 
 const REGENERABLE_CONTENT_TYPES = ["text", "heading", "key_insight", "key_point"];
 const REGENERABLE_INTERACTION_TYPES = ["multiple_choice", "true_false", "reflection", "drag_and_drop", "matching", "dialog_cards"];
@@ -61,12 +62,12 @@ export async function POST(
       );
     }
 
-    const settings = course.settings as { apiKeys?: { openai?: string } } | null;
-    const apiKey = settings?.apiKeys?.openai ?? null;
-    const client = getOpenAIClient(apiKey);
-    if (!client) {
+    let llm: LlmProvider;
+    try {
+      llm = await getLlm(courseAiSettings(course.settings));
+    } catch (e) {
       return NextResponse.json(
-        { error: "No OpenAI API key configured" },
+        { error: e instanceof Error ? e.message : "No AI provider is set up." },
         { status: 400 }
       );
     }
@@ -87,7 +88,7 @@ export async function POST(
     let updatedData: Prisma.InputJsonValue;
 
     if (isContent) {
-      const result = await regenerateContentBlock(client, {
+      const result = await regenerateContentBlock(llm, {
         blockType: block.type,
         currentContent: block.data as Record<string, unknown>,
         pageContent,
@@ -97,7 +98,7 @@ export async function POST(
       });
       updatedData = result.content as Prisma.InputJsonValue;
     } else {
-      const result = await regenerateInteractionBlock(client, {
+      const result = await regenerateInteractionBlock(llm, {
         blockType: block.type,
         currentConfig: block.data as Record<string, unknown>,
         pageContent,
