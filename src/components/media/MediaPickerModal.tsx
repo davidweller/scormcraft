@@ -163,7 +163,7 @@ export default function MediaPickerModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all">
                 <Dialog.Title className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                   <span className="font-medium text-gray-900">{isFileMode ? "Select File" : isVideoMode ? "Select Video" : "Select Image"}</span>
                   <button
@@ -182,7 +182,7 @@ export default function MediaPickerModal({
                         className={({ selected }) =>
                           `flex-1 py-2.5 text-sm font-medium focus:outline-none ${
                             selected
-                              ? "text-indigo-600 border-b-2 border-indigo-600"
+                              ? "text-brand-600 border-b-2 border-brand-600"
                               : "text-gray-500 hover:text-gray-700"
                           }`
                         }
@@ -199,7 +199,7 @@ export default function MediaPickerModal({
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search..."
-                        className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                       />
 
                       {loading ? (
@@ -214,7 +214,7 @@ export default function MediaPickerModal({
                             <button
                               key={item.id}
                               onClick={() => handleSelectMedia(item)}
-                              className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-indigo-500 transition-colors"
+                              className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 hover:border-brand-500 transition-colors"
                             >
                               {item.mimeType.startsWith("image/") ? (
                                 <img
@@ -244,7 +244,7 @@ export default function MediaPickerModal({
 
                     <Tab.Panel>
                       <div className="text-center py-8">
-                        <label className="cursor-pointer inline-flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 transition-colors">
+                        <label className="cursor-pointer inline-flex flex-col items-center gap-3 p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-brand-400 transition-colors">
                           <input
                             type="file"
                             accept={isFileMode ? DOCUMENT_ACCEPT : isVideoMode ? "video/mp4" : "image/*"}
@@ -297,7 +297,7 @@ export default function MediaPickerModal({
                             onChange={(e) => setPrompt(e.target.value)}
                             rows={3}
                             placeholder="A professional illustration of..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -308,7 +308,7 @@ export default function MediaPickerModal({
                             <select
                               value={style}
                               onChange={(e) => setStyle(e.target.value as GenerationStyle)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                             >
                               <option value="illustration">Illustration</option>
                               <option value="photorealistic">Photorealistic</option>
@@ -323,7 +323,7 @@ export default function MediaPickerModal({
                             <select
                               value={aspectRatio}
                               onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                             >
                               <option value="1:1">Square (1:1)</option>
                               <option value="16:9">Landscape (16:9)</option>
@@ -336,7 +336,7 @@ export default function MediaPickerModal({
                         <button
                           onClick={handleGenerate}
                           disabled={generating || !prompt.trim()}
-                          className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-md text-sm font-medium text-white"
+                          className="w-full px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 rounded-md text-sm font-medium text-white"
                         >
                           {generating ? "Generating..." : "Generate Image"}
                         </button>

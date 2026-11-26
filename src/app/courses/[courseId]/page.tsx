@@ -30,14 +30,14 @@ export default async function CoursePage({
     <main className="min-h-screen p-6 lg:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center gap-4">
-          <Link href="/courses" className="text-blue-600 hover:underline">
+          <Link href="/courses" className="text-brand-600 hover:underline">
             ← Courses
           </Link>
         </div>
 
         <NextActionPanel course={course} />
 
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="rounded-lg border border-gray-200 bg-surface p-6 shadow-sm">
           <CourseMetadata courseId={courseId} course={course} />
           <div className="mt-3 text-sm text-gray-500">
             {counts.totalModules} modules · {counts.totalPages} pages · {counts.totalInteractions} interactions
@@ -59,7 +59,7 @@ export default async function CoursePage({
             </p>
             <Link
               href={`/courses/${courseId}/blueprint`}
-              className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="mt-4 inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
             >
               Complete Blueprint
             </Link>

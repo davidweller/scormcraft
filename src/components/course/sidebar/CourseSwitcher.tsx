@@ -36,7 +36,7 @@ export function CourseSwitcher({ currentCourseId, currentCourseTitle }: CourseSw
   return (
     <div className="px-3 py-3">
       <Menu as="div" className="relative">
-        <Menu.Button className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left shadow-sm transition-colors hover:bg-gray-50">
+        <Menu.Button className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-surface px-3 py-2 text-left shadow-sm transition-colors hover:bg-gray-50">
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium text-gray-900">
               {currentCourseTitle || "Untitled Course"}
@@ -55,7 +55,7 @@ export function CourseSwitcher({ currentCourseId, currentCourseTitle }: CourseSw
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          <Menu.Items className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg focus:outline-none">
+          <Menu.Items className="absolute left-0 right-0 z-20 mt-1 max-h-60 overflow-auto rounded-lg border border-gray-200 bg-surface py-1 shadow-lg focus:outline-none">
             {loading ? (
               <div className="px-3 py-2 text-sm text-gray-500">Loading...</div>
             ) : otherCourses.length === 0 ? (

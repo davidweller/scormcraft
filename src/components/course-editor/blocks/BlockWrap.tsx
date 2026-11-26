@@ -52,11 +52,11 @@ export function BlockWrap({
   const bgClass =
     variant === "interaction"
       ? "border-amber-100 bg-amber-50/50"
-      : "border-gray-200 bg-white";
+      : "border-gray-200 bg-surface";
 
   return (
     <div
-      className={`group relative rounded border p-3 transition-shadow ${bgClass} ${isDragging ? "shadow-lg ring-2 ring-blue-400" : ""} ${regenerating ? "opacity-60" : ""}`}
+      className={`group relative rounded border p-3 transition-shadow ${bgClass} ${isDragging ? "shadow-lg ring-2 ring-brand-400" : ""} ${regenerating ? "opacity-60" : ""}`}
       style={style}
     >
       {/* Left side: drag handle */}
@@ -72,7 +72,7 @@ export function BlockWrap({
           {typeLabel}
         </span>
         {saving && <span className="text-xs text-gray-400">Saving…</span>}
-        {regenerating && <span className="text-xs text-blue-500">Regenerating…</span>}
+        {regenerating && <span className="text-xs text-brand-500">Regenerating…</span>}
 
         {/* Actions menu */}
         <div className="relative opacity-0 transition-opacity group-hover:opacity-100" ref={menuRef}>
@@ -89,7 +89,7 @@ export function BlockWrap({
             </svg>
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-full z-10 mt-1 min-w-[140px] rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full z-10 mt-1 min-w-[140px] rounded-md border border-gray-200 bg-surface py-1 shadow-lg">
               {onRegenerate && (
                 <button
                   type="button"

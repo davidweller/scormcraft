@@ -69,10 +69,10 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50/40">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-sm">
+        <section className="rounded-lg border border-gray-200 bg-gradient-to-r from-brand-50 to-brand-50 p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              <p className="text-xs font-semibold uppercase tracking-wider text-brand-600">
                 SCORM Course Builder
               </p>
               <h1 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -85,21 +85,21 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href="/courses/new"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700"
               >
                 <SparklesIcon className="h-4 w-4" />
                 Create new course
               </Link>
               <Link
                 href="/courses"
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-surface px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
               >
                 <FolderOpenIcon className="h-4 w-4" />
                 View all courses
               </Link>
               <Link
                 href="/settings"
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-surface px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
               >
                 <Cog6ToothIcon className="h-4 w-4" />
                 Settings
@@ -107,23 +107,23 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-blue-100 bg-white/80 p-3">
+            <div className="rounded-lg border border-brand-100 bg-surface/80 p-3">
               <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <SparklesIcon className="h-4 w-4 text-blue-600" />
+                <SparklesIcon className="h-4 w-4 text-brand-600" />
                 Create
               </p>
               <p className="mt-1 text-sm text-gray-600">Start from a blank course setup in minutes.</p>
             </div>
-            <div className="rounded-lg border border-blue-100 bg-white/80 p-3">
+            <div className="rounded-lg border border-brand-100 bg-surface/80 p-3">
               <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <ClockIcon className="h-4 w-4 text-blue-600" />
+                <ClockIcon className="h-4 w-4 text-brand-600" />
                 Continue
               </p>
               <p className="mt-1 text-sm text-gray-600">Pick up where you left off with recent courses.</p>
             </div>
-            <div className="rounded-lg border border-blue-100 bg-white/80 p-3">
+            <div className="rounded-lg border border-brand-100 bg-surface/80 p-3">
               <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                <DocumentArrowDownIcon className="h-4 w-4 text-blue-600" />
+                <DocumentArrowDownIcon className="h-4 w-4 text-brand-600" />
                 Import
               </p>
               <p className="mt-1 text-sm text-gray-600">Import from Word from the new course page.</p>
@@ -131,7 +131,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-gray-200 bg-surface p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -143,7 +143,7 @@ export default function Home() {
             {hasCourses && (
               <Link
                 href="/courses"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-surface px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 See all
                 <ArrowRightIcon className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function Home() {
               <div className="mt-3">
                 <Link
                   href="/courses"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-surface px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-100"
                 >
                   Go to courses
                   <ArrowRightIcon className="h-4 w-4" />
@@ -177,14 +177,14 @@ export default function Home() {
               <div className="mt-4 flex justify-center gap-2">
                 <Link
                   href="/courses/new"
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
                 >
                   <SparklesIcon className="h-4 w-4" />
                   Create course
                 </Link>
                 <Link
                   href="/courses"
-                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   <FolderOpenIcon className="h-4 w-4" />
                   View courses
@@ -197,7 +197,7 @@ export default function Home() {
                 <li key={course.id}>
                   <Link
                     href={`/courses/${course.id}`}
-                    className="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-blue-300 hover:bg-gray-50"
+                    className="block rounded-lg border border-gray-200 p-4 transition-colors hover:border-brand-300 hover:bg-gray-50"
                   >
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
@@ -211,7 +211,7 @@ export default function Home() {
                           Updated {formatUpdatedDate(course.updatedAt)}
                         </p>
                       </div>
-                      <span className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700">
+                      <span className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-surface px-2.5 py-1 text-xs font-medium text-gray-700">
                         Continue
                         <ArrowRightIcon className="h-3.5 w-3.5" />
                       </span>
@@ -223,9 +223,9 @@ export default function Home() {
           )}
         </section>
 
-        <section className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <section className="rounded-lg border border-gray-200 bg-surface p-6 shadow-sm">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <SparklesIcon className="h-5 w-5 text-blue-600" />
+            <SparklesIcon className="h-5 w-5 text-brand-600" />
             Quick start
           </h2>
           <ol className="mt-3 space-y-2 text-sm text-gray-600">

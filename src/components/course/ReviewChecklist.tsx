@@ -76,7 +76,7 @@ export function ReviewChecklist({ issues, isOpen, onClose }: ReviewChecklistProp
               leaveFrom="opacity-100 translate-x-0"
               leaveTo="opacity-0 translate-x-4"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all">
                 <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
                   <Dialog.Title className="text-lg font-semibold text-gray-900">
                     Review Checklist
@@ -129,7 +129,7 @@ export function ReviewChecklist({ issues, isOpen, onClose }: ReviewChecklistProp
                                   <Link
                                     href={issue.path}
                                     onClick={onClose}
-                                    className="mt-1 inline-flex text-xs font-medium text-blue-600 hover:text-blue-700 hover:underline"
+                                    className="mt-1 inline-flex text-xs font-medium text-brand-600 hover:text-brand-700 hover:underline"
                                   >
                                     Go to fix →
                                   </Link>
@@ -176,7 +176,7 @@ export function ReviewChecklistButton({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-surface px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
       >
         {children ?? (
           <>

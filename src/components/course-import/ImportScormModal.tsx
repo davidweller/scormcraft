@@ -258,7 +258,7 @@ export default function ImportScormModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all">
                 <Dialog.Title className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
                   <span className="font-medium text-gray-900">
                     {step === "upload" && "Import SCORM package"}
@@ -292,7 +292,7 @@ export default function ImportScormModal({
                         onDrop={handleDrop}
                         className={`relative rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
                           dragActive
-                            ? "border-blue-500 bg-blue-50"
+                            ? "border-brand-500 bg-brand-50"
                             : "border-gray-300 hover:border-gray-400"
                         }`}
                       >
@@ -317,7 +317,7 @@ export default function ImportScormModal({
                           />
                         </svg>
                         <p className="mt-2 text-sm text-gray-600">
-                          <span className="font-medium text-blue-600">Click to upload</span> or drag
+                          <span className="font-medium text-brand-600">Click to upload</span> or drag
                           and drop a .zip package
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
@@ -340,7 +340,7 @@ export default function ImportScormModal({
 
                   {(step === "uploading" || step === "analyzing" || step === "creating") && (
                     <div className="py-10 text-center">
-                      <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
+                      <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-brand-600" />
                       <p className="mt-4 text-sm text-gray-600">
                         {step === "uploading" && `Uploading ${formatBytes(uploadBytes)}…`}
                         {step === "analyzing" &&
@@ -362,7 +362,7 @@ export default function ImportScormModal({
                           preview.fidelity === "lossless"
                             ? "border-green-200 bg-green-50 text-green-800"
                             : preview.fidelity === "high"
-                              ? "border-blue-200 bg-blue-50 text-blue-800"
+                              ? "border-brand-200 bg-brand-50 text-brand-800"
                               : "border-amber-200 bg-amber-50 text-amber-800"
                         }`}
                       >
@@ -401,7 +401,7 @@ export default function ImportScormModal({
                           id="scorm-import-title"
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
-                          className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                         />
                       </div>
 
@@ -490,7 +490,7 @@ export default function ImportScormModal({
                                     <button
                                       type="button"
                                       onClick={() => toggleLoss(group.code)}
-                                      className="text-xs text-blue-600 hover:underline"
+                                      className="text-xs text-brand-600 hover:underline"
                                     >
                                       {expandedLoss.has(group.code) ? "hide" : "where"}
                                     </button>
@@ -530,7 +530,7 @@ export default function ImportScormModal({
                       type="button"
                       onClick={handleCommit}
                       disabled={!title.trim()}
-                      className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="rounded bg-brand-600 px-3 py-1.5 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       Create course
                     </button>

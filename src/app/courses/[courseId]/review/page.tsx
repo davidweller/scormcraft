@@ -50,7 +50,7 @@ export default function ReviewPage() {
   if (error && !report) {
     return (
       <main className="min-h-screen p-8">
-        <Link href="/courses" className="text-blue-600 hover:underline">← Courses</Link>
+        <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error}</p>
       </main>
     );
@@ -60,7 +60,7 @@ export default function ReviewPage() {
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-3xl">
         <div>
-          <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">← Course</Link>
+          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
           <h1 className="mt-2 text-2xl font-bold">Review</h1>
           <p className="mt-1 text-sm text-gray-500">Validation report before export</p>
         </div>
@@ -114,7 +114,7 @@ export default function ReviewPage() {
                       {a.pageId && (
                         <Link
                           href={`/courses/${courseId}/edit/page/${a.pageId}`}
-                          className="text-sm text-blue-600 hover:underline"
+                          className="text-sm text-brand-600 hover:underline"
                         >
                           Go to page
                         </Link>
@@ -137,7 +137,7 @@ export default function ReviewPage() {
                       {b.pageId && (
                         <Link
                           href={`/courses/${courseId}/edit/page/${b.pageId}`}
-                          className="ml-2 shrink-0 text-sm text-blue-600 hover:underline"
+                          className="ml-2 shrink-0 text-sm text-brand-600 hover:underline"
                         >
                           Go to page
                         </Link>
@@ -153,7 +153,7 @@ export default function ReviewPage() {
         <div className="mt-10 flex gap-2">
           <Link
             href={`/courses/${courseId}/export`}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
           >
             Export SCORM
           </Link>

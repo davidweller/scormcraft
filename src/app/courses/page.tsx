@@ -53,7 +53,7 @@ export default function CoursesPage() {
         <h1 className="text-2xl font-bold">Courses</h1>
         <Link
           href="/courses/new"
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
         >
           New course
         </Link>
@@ -66,7 +66,7 @@ export default function CoursesPage() {
         <ul className="space-y-3">
           {courses.map((c) => (
             <li key={c.id}>
-              <div className="flex items-start gap-2 rounded border border-gray-200 p-4 hover:border-blue-300 hover:bg-gray-50">
+              <div className="flex items-start gap-2 rounded border border-gray-200 p-4 hover:border-brand-300 hover:bg-gray-50">
                 <Link
                   href={`/courses/${c.id}`}
                   className="flex-1 min-w-0"

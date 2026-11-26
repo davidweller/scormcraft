@@ -54,7 +54,7 @@ export default function ExportPage() {
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-xl">
         <div>
-          <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">← Course</Link>
+          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
           <h1 className="mt-2 text-2xl font-bold">Export course</h1>
           <p className="mt-1 text-sm text-gray-500">Choose a format and download your course.</p>
         </div>
@@ -132,7 +132,7 @@ export default function ExportPage() {
             type="button"
             onClick={handleExport}
             disabled={loading}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {loading ? "Preparing…" : format === "docx" ? "Download DOCX" : "Download ZIP"}
           </button>

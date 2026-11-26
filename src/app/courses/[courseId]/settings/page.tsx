@@ -358,7 +358,7 @@ export default function SettingsPage() {
             </select>
             <p className="mt-1 text-xs text-gray-400">
               Set the app default, subscriptions and shared keys in{" "}
-              <a href="/settings" className="text-blue-600 hover:underline">
+              <a href="/settings" className="text-brand-600 hover:underline">
                 Settings
               </a>
               .
@@ -480,7 +480,7 @@ export default function SettingsPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-blue-600 px-5 py-2.5 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-5 py-2.5 text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save settings"}
           </button>
@@ -495,7 +495,7 @@ export default function SettingsPage() {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded border border-red-600 bg-white px-5 py-2.5 text-red-600 hover:bg-red-50 disabled:opacity-50"
+            className="rounded border border-red-600 bg-surface px-5 py-2.5 text-red-600 hover:bg-red-50 disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete course"}
           </button>

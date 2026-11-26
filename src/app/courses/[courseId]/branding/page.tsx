@@ -293,7 +293,7 @@ export default function BrandingPage() {
               <img
                 src={logoUrl}
                 alt="Course logo"
-                className="h-16 w-auto rounded border border-gray-200 bg-white object-contain p-1"
+                className="h-16 w-auto rounded border border-gray-200 bg-surface object-contain p-1"
               />
               <button
                 type="button"
@@ -412,13 +412,13 @@ export default function BrandingPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-blue-600 px-5 py-2.5 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-5 py-2.5 text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save branding"}
           </button>
           <Link
             href={`/courses/${courseId}/preview`}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-brand-600 hover:underline"
           >
             Preview course
           </Link>

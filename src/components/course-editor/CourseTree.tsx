@@ -180,7 +180,7 @@ export function CourseTree({
         type="button"
         onClick={handleAddModule}
         disabled={loading}
-        className="text-left text-sm text-blue-600 hover:underline disabled:opacity-50"
+        className="text-left text-sm text-brand-600 hover:underline disabled:opacity-50"
       >
         + Add module
       </button>
@@ -285,7 +285,7 @@ function ModuleRow({
           type="button"
           onClick={() => onAddLesson(mod.id)}
           disabled={loading}
-          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+          className="text-xs text-brand-600 hover:underline disabled:opacity-50"
         >
           + Lesson
         </button>
@@ -394,7 +394,7 @@ function LessonRow({
           type="button"
           onClick={() => onAddPage(moduleId, lesson.id)}
           disabled={loading}
-          className="text-xs text-blue-600 hover:underline disabled:opacity-50"
+          className="text-xs text-brand-600 hover:underline disabled:opacity-50"
         >
           + Page
         </button>
@@ -475,7 +475,7 @@ function PageRow({
           <span className="ml-4 w-2 shrink-0" />
           <Link
             href={`/courses/${courseId}/edit/page/${page.id}`}
-            className={`flex-1 text-sm hover:underline ${isSelected ? "font-medium text-blue-600" : ""}`}
+            className={`flex-1 text-sm hover:underline ${isSelected ? "font-medium text-brand-600" : ""}`}
           >
             {page.title}
           </Link>

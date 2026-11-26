@@ -118,7 +118,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all">
                 <Dialog.Title className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                   <span className="font-medium text-gray-900">Select Icon</span>
                   <button
@@ -135,7 +135,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search icons..."
-                    className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full mb-4 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   />
 
                   <Tab.Group>
@@ -144,7 +144,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                         className={({ selected }) =>
                           `flex-1 py-2.5 text-sm font-medium focus:outline-none ${
                             selected
-                              ? "text-indigo-600 border-b-2 border-indigo-600"
+                              ? "text-brand-600 border-b-2 border-brand-600"
                               : "text-gray-500 hover:text-gray-700"
                           }`
                         }
@@ -155,7 +155,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                         className={({ selected }) =>
                           `flex-1 py-2.5 text-sm font-medium focus:outline-none ${
                             selected
-                              ? "text-indigo-600 border-b-2 border-indigo-600"
+                              ? "text-brand-600 border-b-2 border-brand-600"
                               : "text-gray-500 hover:text-gray-700"
                           }`
                         }
@@ -171,7 +171,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                             onClick={() => setHeroVariant("outline")}
                             className={`px-3 py-1 text-sm rounded-md ${
                               heroVariant === "outline"
-                                ? "bg-indigo-100 text-indigo-700"
+                                ? "bg-brand-100 text-brand-700"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                           >
@@ -181,7 +181,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                             onClick={() => setHeroVariant("solid")}
                             className={`px-3 py-1 text-sm rounded-md ${
                               heroVariant === "solid"
-                                ? "bg-indigo-100 text-indigo-700"
+                                ? "bg-brand-100 text-brand-700"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                           >
@@ -195,7 +195,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                               key={name}
                               onClick={() => handleSelectHeroicon(name)}
                               title={toKebabCase(name)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center"
+                              className="p-3 rounded-lg border border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-colors flex items-center justify-center"
                             >
                               {renderHeroicon(name)}
                             </button>
@@ -214,7 +214,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                             onClick={() => setFaVariant("solid")}
                             className={`px-3 py-1 text-sm rounded-md ${
                               faVariant === "solid"
-                                ? "bg-indigo-100 text-indigo-700"
+                                ? "bg-brand-100 text-brand-700"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                           >
@@ -224,7 +224,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                             onClick={() => setFaVariant("regular")}
                             className={`px-3 py-1 text-sm rounded-md ${
                               faVariant === "regular"
-                                ? "bg-indigo-100 text-indigo-700"
+                                ? "bg-brand-100 text-brand-700"
                                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
                           >
@@ -238,7 +238,7 @@ export default function IconPicker({ isOpen, onClose, onSelect }: IconPickerProp
                               key={name}
                               onClick={() => handleSelectFaIcon(name)}
                               title={faIconNameToKebab(name)}
-                              className="p-3 rounded-lg border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center"
+                              className="p-3 rounded-lg border border-gray-200 hover:border-brand-500 hover:bg-brand-50 transition-colors flex items-center justify-center"
                             >
                               {renderFaIcon(name)}
                             </button>

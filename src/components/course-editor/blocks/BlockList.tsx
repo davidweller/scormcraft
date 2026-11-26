@@ -274,7 +274,7 @@ export function BlockList({
                 type="button"
                 onClick={() => addBlock("content", type)}
                 disabled={adding}
-                className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+                className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
               >
                 + {label}
               </button>

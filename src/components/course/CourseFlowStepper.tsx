@@ -80,7 +80,7 @@ export function CourseFlowStepper({ courseId }: { courseId: string }) {
                 <span
                   className={
                     isCurrentStep
-                      ? "bg-blue-600 text-white"
+                      ? "bg-brand-600 text-white"
                       : disabled
                         ? "bg-gray-100 text-gray-400"
                         : "bg-gray-200 text-gray-700"
@@ -90,7 +90,7 @@ export function CourseFlowStepper({ courseId }: { courseId: string }) {
                 </span>
               )}
             </span>
-            <span className={isCurrentStep ? "font-medium text-blue-600" : disabled ? "text-gray-400" : "text-gray-700"}>
+            <span className={isCurrentStep ? "font-medium text-brand-600" : disabled ? "text-gray-400" : "text-gray-700"}>
               {step.label}
             </span>
           </>
@@ -107,7 +107,7 @@ export function CourseFlowStepper({ courseId }: { courseId: string }) {
               <Link
                 href={href}
                 className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-gray-100 ${
-                  isCurrentStep ? "bg-blue-50" : ""
+                  isCurrentStep ? "bg-brand-50" : ""
                 }`}
               >
                 {content}

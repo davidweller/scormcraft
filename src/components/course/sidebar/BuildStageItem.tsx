@@ -28,7 +28,7 @@ function StatusIcon({ status }: { status: StageStatus }) {
     case "in_progress":
       return (
         <span className="flex h-5 w-5 items-center justify-center">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
         </span>
       );
     case "has_issues":
@@ -65,13 +65,13 @@ export function BuildStageItem({
       href={href}
       className={`group flex items-start gap-3 rounded-md px-3 py-2 transition-colors ${
         isActive
-          ? "bg-blue-50 text-blue-700"
+          ? "bg-brand-50 text-brand-700"
           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
       }`}
     >
       <StatusIcon status={status} />
       <div className="min-w-0 flex-1">
-        <div className={`text-sm font-medium ${isActive ? "text-blue-700" : ""}`}>
+        <div className={`text-sm font-medium ${isActive ? "text-brand-700" : ""}`}>
           {label}
         </div>
         <div
@@ -79,7 +79,7 @@ export function BuildStageItem({
             status === "has_issues"
               ? "text-amber-600"
               : isActive
-                ? "text-blue-600"
+                ? "text-brand-600"
                 : "text-gray-500"
           }`}
         >

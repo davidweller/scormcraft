@@ -193,12 +193,12 @@ export function RichTextEditor({
               }
             }}
             placeholder="https://example.com"
-            className="min-w-0 flex-1 rounded border border-gray-300 px-2 py-0.5 text-sm focus:border-blue-500 focus:outline-none"
+            className="min-w-0 flex-1 rounded border border-gray-300 px-2 py-0.5 text-sm focus:border-brand-500 focus:outline-none"
           />
           <button
             type="button"
             onClick={applyLink}
-            className="rounded bg-blue-600 px-2 py-0.5 text-xs text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-2 py-0.5 text-xs text-white hover:bg-brand-700"
           >
             Apply
           </button>
@@ -219,7 +219,7 @@ export function RichTextEditor({
       <EditorContent
         editor={editor}
         onBlur={handleBlur}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500"
       />
     </div>
   );
@@ -243,7 +243,7 @@ function ToolbarButton({
       title={title}
       className={`p-1 rounded transition-colors ${
         isActive
-          ? "bg-blue-100 text-blue-700"
+          ? "bg-brand-100 text-brand-700"
           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
       }`}
     >

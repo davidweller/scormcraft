@@ -57,7 +57,7 @@ export function ModuleCard({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="rounded-lg border border-gray-200 bg-surface shadow-sm transition-shadow hover:shadow-md">
       <div className="p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
@@ -71,13 +71,13 @@ export function ModuleCard({
             <button
               type="button"
               onClick={() => setExpanded((e) => !e)}
-              className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
             >
               {expanded ? "Collapse" : "Expand"}
             </button>
             <Link
               href={`/courses/${courseId}/edit`}
-              className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
             >
               Edit
             </Link>
@@ -85,7 +85,7 @@ export function ModuleCard({
               type="button"
               onClick={handleDuplicate}
               disabled={duplicating}
-              className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
               {duplicating ? "…" : "Duplicate"}
             </button>
@@ -93,7 +93,7 @@ export function ModuleCard({
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded border border-red-200 bg-white px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+              className="rounded border border-red-200 bg-surface px-3 py-1.5 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
             >
               {deleting ? "…" : "Delete"}
             </button>

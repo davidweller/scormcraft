@@ -29,7 +29,7 @@ export function PreviewModeToggle({
             type="button"
             onClick={() => setMode("learner")}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              mode === "learner" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              mode === "learner" ? "bg-surface text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Preview (Learner View)
@@ -38,7 +38,7 @@ export function PreviewModeToggle({
             type="button"
             onClick={() => setMode("lms")}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              mode === "lms" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              mode === "lms" ? "bg-surface text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
             }`}
           >
             Preview (LMS Simulation)
@@ -51,7 +51,7 @@ export function PreviewModeToggle({
         )}
       </div>
       {noContent ? null : (
-        <div className="flex-1 min-h-0 rounded border border-gray-200 bg-white">
+        <div className="flex-1 min-h-0 rounded border border-gray-200 bg-surface">
           <iframe
             title={mode === "lms" ? "Course preview (LMS simulation)" : "Course preview (learner view)"}
             src={iframeSrc}

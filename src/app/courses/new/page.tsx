@@ -101,7 +101,7 @@ export default function NewCoursePage() {
             <a
               href="/templates/course-template.docx"
               download
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -116,7 +116,7 @@ export default function NewCoursePage() {
             <button
               type="button"
               onClick={() => setShowImportModal(true)}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -131,7 +131,7 @@ export default function NewCoursePage() {
             <button
               type="button"
               onClick={() => setShowScormImportModal(true)}
-              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              className="inline-flex items-center gap-2 rounded-md border border-gray-300 bg-surface px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -357,7 +357,7 @@ export default function NewCoursePage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {loading ? "Creating…" : "Create and go to blueprint"}
             </button>

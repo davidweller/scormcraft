@@ -117,7 +117,7 @@ export default function AppSettingsPage() {
     <main className="min-h-screen bg-gray-50/40 p-6 lg:p-8">
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">
+          <Link href="/" className="text-sm text-brand-600 hover:underline">
             ← Home
           </Link>
           <h1 className="mt-2 text-2xl font-bold">Settings</h1>
@@ -134,7 +134,7 @@ export default function AppSettingsPage() {
         {error && <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         {notice && <p className="rounded bg-green-50 p-3 text-sm text-green-700">{notice}</p>}
 
-        <section className="space-y-3 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <section className="space-y-3 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
           <h2 className="text-lg font-semibold">AI provider</h2>
           <label htmlFor="defaultProvider" className="block text-sm font-medium text-gray-700">
             Default for all courses
@@ -158,14 +158,14 @@ export default function AppSettingsPage() {
         </section>
 
         {data.desktop && (
-          <section className="space-y-5 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <section className="space-y-5 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Subscriptions</h2>
               <button
                 type="button"
                 onClick={() => void load()}
                 disabled={refreshing}
-                className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+                className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
               >
                 {refreshing ? "Checking…" : "Check again"}
               </button>
@@ -215,7 +215,7 @@ export default function AppSettingsPage() {
           </section>
         )}
 
-        <section className="space-y-5 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <section className="space-y-5 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
           <h2 className="text-lg font-semibold">API keys</h2>
           {(Object.keys(KEY_LABELS) as KeyName[]).map((k) => {
             const state = data.keys[k];
@@ -262,7 +262,7 @@ export default function AppSettingsPage() {
                         await save({ apiKeys: { [k]: newKeys[k].trim() } }, "Key saved.");
                         setNewKeys({ ...newKeys, [k]: "" });
                       }}
-                      className="rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="rounded bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       Save
                     </button>
@@ -326,7 +326,7 @@ function SubscriptionRow(props: {
           <button
             type="button"
             onClick={props.onInstall}
-            className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
+            className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50"
           >
             Install {props.tool}
           </button>
@@ -334,7 +334,7 @@ function SubscriptionRow(props: {
           <button
             type="button"
             onClick={props.onLogin}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-3 py-1.5 text-sm text-white hover:bg-brand-700"
           >
             {props.signedIn ? "Switch account" : "Sign in"}
           </button>
@@ -352,7 +352,7 @@ function SubscriptionRow(props: {
           type="button"
           onClick={props.onSaveModel}
           disabled={props.saving}
-          className="whitespace-nowrap rounded border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+          className="whitespace-nowrap rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
         >
           Save model
         </button>
@@ -382,7 +382,7 @@ function ModelField(props: {
         type="button"
         onClick={props.onSave}
         disabled={props.saving}
-        className="whitespace-nowrap rounded border border-gray-300 bg-white px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+        className="whitespace-nowrap rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
       >
         Save model
       </button>

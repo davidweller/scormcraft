@@ -17,11 +17,11 @@ export function NextActionPanel({ course }: NextActionPanelProps) {
   const showExport = nextAction.stage !== "export" && flow.generate.isComplete;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-5 shadow-sm">
+    <div className="rounded-lg border border-gray-200 bg-gradient-to-r from-brand-50 to-brand-50 p-5 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-blue-600">
+            <span className="text-xs font-medium uppercase tracking-wider text-brand-600">
               Next step
             </span>
             {nextAction.issueCount && (
@@ -37,7 +37,7 @@ export function NextActionPanel({ course }: NextActionPanelProps) {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={nextAction.href}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
           >
             {nextAction.label}
             <ArrowRightIcon className="h-4 w-4" />
@@ -46,7 +46,7 @@ export function NextActionPanel({ course }: NextActionPanelProps) {
           {showPreview && (
             <Link
               href={`/courses/${course.id}/preview`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-surface px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             >
               <EyeIcon className="h-4 w-4" />
               Preview
@@ -56,7 +56,7 @@ export function NextActionPanel({ course }: NextActionPanelProps) {
           {showExport && (
             <Link
               href={`/courses/${course.id}/export`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-surface px-3 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
             >
               <ArrowDownTrayIcon className="h-4 w-4" />
               Export

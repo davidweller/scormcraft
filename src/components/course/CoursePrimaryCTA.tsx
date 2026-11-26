@@ -14,7 +14,7 @@ export function CoursePrimaryCTA({ courseId, course }: { courseId: string; cours
     return (
       <Link
         href={`/courses/${courseId}/blueprint`}
-        className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
       >
         Complete Blueprint
       </Link>
@@ -24,7 +24,7 @@ export function CoursePrimaryCTA({ courseId, course }: { courseId: string; cours
     return (
       <Link
         href={`/courses/${courseId}/generate`}
-        className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        className="inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
       >
         Generate Module Content
       </Link>
@@ -33,7 +33,7 @@ export function CoursePrimaryCTA({ courseId, course }: { courseId: string; cours
   return (
     <Link
       href={`/courses/${courseId}/export`}
-      className="inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      className="inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2"
     >
       Export SCORM 1.2
     </Link>

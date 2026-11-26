@@ -214,7 +214,7 @@ export default function GenerateInteractionsPage() {
   if (error && !course) {
     return (
       <main className="min-h-screen p-8">
-        <Link href="/courses" className="text-blue-600 hover:underline">
+        <Link href="/courses" className="text-brand-600 hover:underline">
           ← Courses
         </Link>
         <p className="mt-4 text-red-600">{error}</p>
@@ -230,7 +230,7 @@ export default function GenerateInteractionsPage() {
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-3xl">
         <div>
-          <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">
+          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">
             ← Course
           </Link>
           <h1 className="mt-2 text-2xl font-bold">Generate Interactions</h1>
@@ -250,7 +250,7 @@ export default function GenerateInteractionsPage() {
             <h2 className="font-semibold text-gray-900">Interaction Strategy</h2>
             <Link
               href={`/courses/${courseId}/blueprint`}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-brand-600 hover:underline"
             >
               Edit in Blueprint
             </Link>
@@ -270,7 +270,7 @@ export default function GenerateInteractionsPage() {
             ) : (
               <p className="mt-2 text-sm text-gray-500 italic">
                 No learning outcomes defined.{" "}
-                <Link href={`/courses/${courseId}/blueprint`} className="text-blue-600 hover:underline">
+                <Link href={`/courses/${courseId}/blueprint`} className="text-brand-600 hover:underline">
                   Add them in Blueprint
                 </Link>
               </p>
@@ -301,7 +301,7 @@ export default function GenerateInteractionsPage() {
                     type="checkbox"
                     checked={config.enabledTypes.includes(type)}
                     onChange={() => toggleType(type)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
                   />
                   <span>{INTERACTION_TYPE_LABELS[type]}</span>
                 </label>
@@ -319,7 +319,7 @@ export default function GenerateInteractionsPage() {
                     name="density"
                     checked={config.density === d}
                     onChange={() => setDensity(d)}
-                    className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 border-gray-300 text-brand-600 focus:ring-brand-500"
                   />
                   <span>
                     {d === "light"
@@ -341,7 +341,7 @@ export default function GenerateInteractionsPage() {
                 onChange={() =>
                   setConfig((prev) => ({ ...prev, includeExplanations: !prev.includeExplanations }))
                 }
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500"
               />
               <span>Include explanations for correct/incorrect answers</span>
             </label>
@@ -352,7 +352,7 @@ export default function GenerateInteractionsPage() {
         {lessonsWithContent.length === 0 ? (
           <p className="mt-6 text-gray-500">
             No lessons have content yet.{" "}
-            <Link href={`/courses/${courseId}/generate`} className="text-blue-600 hover:underline">
+            <Link href={`/courses/${courseId}/generate`} className="text-brand-600 hover:underline">
               Generate lesson content first
             </Link>
           </p>
@@ -368,7 +368,7 @@ export default function GenerateInteractionsPage() {
                 type="button"
                 onClick={generateAll}
                 disabled={generatingAll || generatingId !== null || lessonsWithoutInteractions.length === 0}
-                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 {generatingAll ? "Generating…" : "Generate all"}
               </button>
@@ -427,7 +427,7 @@ export default function GenerateInteractionsPage() {
               });
               window.location.href = `/courses/${courseId}/review`;
             }}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
           >
             Review course →
           </button>

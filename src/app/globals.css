@@ -1,3 +1,85 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * Design tokens. Tailwind's `gray`, `brand` and `surface` colours read these
+ * variables (see tailwind.config.ts), so a theme is one block of values here
+ * and no component needs a `dark:` variant.
+ */
+@layer base {
+  :root {
+    color-scheme: light;
+
+    /* The page behind everything, and raised surfaces such as cards. */
+    --page: 255 255 255;
+    --surface: 255 255 255;
+
+    --gray-50: 249 250 251;
+    --gray-100: 243 244 246;
+    --gray-200: 229 231 235;
+    --gray-300: 209 213 219;
+    --gray-400: 156 163 175;
+    --gray-500: 107 114 128;
+    --gray-600: 75 85 99;
+    --gray-700: 55 65 81;
+    --gray-800: 31 41 55;
+    --gray-900: 17 24 39;
+    --gray-950: 3 7 18;
+
+    /* The one brand colour: primary buttons, links, focus rings, selection. */
+    --brand-50: 239 246 255;
+    --brand-100: 219 234 254;
+    --brand-200: 191 219 254;
+    --brand-300: 147 197 253;
+    --brand-400: 96 165 250;
+    --brand-500: 59 130 246;
+    --brand-600: 37 99 235;
+    --brand-700: 29 78 216;
+    --brand-800: 30 64 175;
+    --brand-900: 30 58 138;
+  }
+
+  .dark {
+    color-scheme: dark;
+
+    --page: 15 17 21;
+    --surface: 23 26 32;
+
+    /* The grey scale runs the other way, so `text-gray-900` stays the
+       strongest text and `bg-gray-50` stays the faintest fill. */
+    --gray-50: 30 34 42;
+    --gray-100: 38 43 52;
+    --gray-200: 51 57 68;
+    --gray-300: 71 78 92;
+    --gray-400: 122 130 145;
+    --gray-500: 150 158 172;
+    --gray-600: 180 187 199;
+    --gray-700: 205 210 219;
+    --gray-800: 225 229 235;
+    --gray-900: 240 242 246;
+    --gray-950: 250 250 252;
+
+    --brand-50: 23 37 64;
+    --brand-100: 28 46 84;
+    --brand-200: 35 60 112;
+    --brand-300: 45 80 150;
+    --brand-400: 59 110 220;
+    --brand-500: 59 130 246;
+    --brand-600: 66 128 245;
+    --brand-700: 99 152 250;
+    --brand-800: 147 187 253;
+    --brand-900: 191 219 254;
+  }
+
+  body {
+    background-color: rgb(var(--page));
+    color: rgb(var(--gray-900));
+  }
+
+  /* One visible keyboard focus style for every control. */
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand-500));
+    outline-offset: 2px;
+  }
+}

@@ -152,7 +152,7 @@ export default function GeneratePagesPage() {
   if (error && !course) {
     return (
       <main className="min-h-screen p-8">
-        <Link href="/courses" className="text-blue-600 hover:underline">← Courses</Link>
+        <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error}</p>
       </main>
     );
@@ -162,7 +162,7 @@ export default function GeneratePagesPage() {
     <main className="min-h-screen p-8">
       <div className="mx-auto max-w-2xl">
         <div>
-          <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">← Course</Link>
+          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
           <h1 className="mt-2 text-2xl font-bold">Generate Lessons</h1>
           <p className="mt-1 text-sm text-gray-500">{course?.title}</p>
         </div>
@@ -178,7 +178,7 @@ export default function GeneratePagesPage() {
         {lessons.length === 0 ? (
           <p className="mt-6 text-gray-500">
             No lessons yet.{" "}
-            <Link href={`/courses/${courseId}/blueprint`} className="text-blue-600 hover:underline">
+            <Link href={`/courses/${courseId}/blueprint`} className="text-brand-600 hover:underline">
               Add them in the blueprint
             </Link>{" "}
             first.
@@ -208,7 +208,7 @@ export default function GeneratePagesPage() {
                   type="button"
                   onClick={generateEmpty}
                   disabled={busy || emptyLessons.length === 0}
-                  className="shrink-0 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="shrink-0 rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
                 >
                   Generate empty lessons ({emptyLessons.length})
                 </button>
@@ -217,7 +217,7 @@ export default function GeneratePagesPage() {
             {batch && (
               <div className="mt-3 h-1.5 overflow-hidden rounded bg-gray-200" aria-hidden="true">
                 <div
-                  className="h-full bg-blue-600 transition-all"
+                  className="h-full bg-brand-600 transition-all"
                   style={{ width: `${(batch.done / batch.total) * 100}%` }}
                 />
               </div>
@@ -267,7 +267,7 @@ export default function GeneratePagesPage() {
         <div className="mt-10 flex gap-2">
           <Link
             href={`/courses/${courseId}/generate-interactions`}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
           >
             Generate Interactions →
           </Link>

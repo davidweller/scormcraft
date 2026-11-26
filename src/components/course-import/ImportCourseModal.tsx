@@ -199,7 +199,7 @@ export default function ImportCourseModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-white shadow-xl transition-all">
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-surface shadow-xl transition-all">
                 <Dialog.Title className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
                   <span className="font-medium text-gray-900">
                     {step === "upload" && "Import Course"}
@@ -231,7 +231,7 @@ export default function ImportCourseModal({
                         onDrop={handleDrop}
                         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                           dragActive
-                            ? "border-blue-500 bg-blue-50"
+                            ? "border-brand-500 bg-brand-50"
                             : "border-gray-300 hover:border-gray-400"
                         }`}
                       >
@@ -255,7 +255,7 @@ export default function ImportCourseModal({
                           />
                         </svg>
                         <p className="mt-2 text-sm text-gray-600">
-                          <span className="font-medium text-blue-600">Click to upload</span> or drag
+                          <span className="font-medium text-brand-600">Click to upload</span> or drag
                           and drop
                         </p>
                         <p className="mt-1 text-xs text-gray-500">
@@ -282,7 +282,7 @@ export default function ImportCourseModal({
                         <a
                           href="/templates/course-template.docx"
                           download
-                          className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700"
+                          className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -297,7 +297,7 @@ export default function ImportCourseModal({
                         <a
                           href="/templates/course-template.md"
                           download
-                          className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700"
+                          className="inline-flex items-center gap-1.5 text-sm text-brand-600 hover:text-brand-700"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
@@ -315,7 +315,7 @@ export default function ImportCourseModal({
 
                   {step === "analyzing" && (
                     <div className="py-12 text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-600" />
+                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-brand-600" />
                       <p className="mt-4 text-sm text-gray-600">
                         Analyzing document by module...
                       </p>
@@ -402,7 +402,7 @@ export default function ImportCourseModal({
                         </button>
                         <button
                           onClick={handleConfirmImport}
-                          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                          className="px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700"
                         >
                           Create Course
                         </button>
@@ -412,7 +412,7 @@ export default function ImportCourseModal({
 
                   {step === "creating" && (
                     <div className="py-12 text-center">
-                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-blue-600" />
+                      <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 border-t-brand-600" />
                       <p className="mt-4 text-sm text-gray-600">Creating your course...</p>
                     </div>
                   )}

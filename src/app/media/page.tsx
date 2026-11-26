@@ -126,7 +126,7 @@ export default function MediaLibraryPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-surface border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -139,7 +139,7 @@ export default function MediaLibraryPage() {
               <h1 className="text-xl font-semibold text-gray-900">Media Library</h1>
             </div>
             <div className="flex items-center gap-3">
-              <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+              <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-surface hover:bg-gray-50 disabled:opacity-50">
                 <input
                   type="file"
                   accept="image/*"
@@ -151,7 +151,7 @@ export default function MediaLibraryPage() {
               </label>
               <button
                 onClick={() => setShowGenerateModal(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-brand-600 hover:bg-brand-700"
               >
                 Generate with AI
               </button>
@@ -176,7 +176,7 @@ export default function MediaLibraryPage() {
               setPage(1);
             }}
             placeholder="Search by filename or prompt..."
-            className="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           />
           <select
             value={sourceFilter}
@@ -184,7 +184,7 @@ export default function MediaLibraryPage() {
               setSourceFilter(e.target.value as typeof sourceFilter);
               setPage(1);
             }}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
           >
             <option value="">All sources</option>
             <option value="upload">Uploaded</option>
@@ -210,7 +210,7 @@ export default function MediaLibraryPage() {
                   onClick={() => setSelectedMedia(item)}
                   className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                     selectedMedia?.id === item.id
-                      ? "border-indigo-500 ring-2 ring-indigo-200"
+                      ? "border-brand-500 ring-2 ring-brand-200"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
@@ -262,7 +262,7 @@ export default function MediaLibraryPage() {
 
       {selectedMedia && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
+          <div className="bg-surface rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-medium text-gray-900">Media Details</h2>
               <button
@@ -282,7 +282,7 @@ export default function MediaLibraryPage() {
               ) : (
                 <a
                   href={selectedMedia.url}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-gray-100 py-10 text-sm text-indigo-600 hover:underline"
+                  className="flex items-center justify-center gap-2 rounded-lg bg-gray-100 py-10 text-sm text-brand-600 hover:underline"
                 >
                   <span aria-hidden="true">{selectedMedia.mimeType.startsWith("video/") ? "🎬" : "📄"}</span>
                   Open {selectedMedia.filename}
@@ -333,7 +333,7 @@ export default function MediaLibraryPage() {
 
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
+          <div className="bg-surface rounded-lg max-w-md w-full">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="font-medium text-gray-900">Generate Image with AI</h2>
               <button
@@ -353,7 +353,7 @@ export default function MediaLibraryPage() {
                   onChange={(e) => setPrompt(e.target.value)}
                   rows={3}
                   placeholder="A professional illustration of..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -364,7 +364,7 @@ export default function MediaLibraryPage() {
                   <select
                     value={style}
                     onChange={(e) => setStyle(e.target.value as GenerationStyle)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   >
                     <option value="illustration">Illustration</option>
                     <option value="photorealistic">Photorealistic</option>
@@ -379,7 +379,7 @@ export default function MediaLibraryPage() {
                   <select
                     value={aspectRatio}
                     onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   >
                     <option value="1:1">Square (1:1)</option>
                     <option value="16:9">Landscape (16:9)</option>
@@ -401,7 +401,7 @@ export default function MediaLibraryPage() {
                 <button
                   onClick={handleGenerate}
                   disabled={generating || !prompt.trim()}
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-md text-sm font-medium text-white"
+                  className="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 rounded-md text-sm font-medium text-white"
                 >
                   {generating ? "Generating..." : "Generate"}
                 </button>

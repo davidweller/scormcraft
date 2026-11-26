@@ -39,7 +39,7 @@ export function PageEditor({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onBlur={saveTitle}
-        className="mb-6 w-full border-0 border-b border-gray-200 bg-transparent text-2xl font-bold focus:border-blue-500 focus:outline-none focus:ring-0"
+        className="mb-6 w-full border-0 border-b border-gray-200 bg-transparent text-2xl font-bold focus:border-brand-500 focus:outline-none focus:ring-0"
         placeholder="Page title"
       />
       {saving && <p className="text-xs text-gray-400">Saving…</p>}

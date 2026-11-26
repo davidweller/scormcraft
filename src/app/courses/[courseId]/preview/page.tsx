@@ -38,7 +38,7 @@ export default async function PreviewPage({
   return (
     <main className="min-h-screen flex flex-col p-6 lg:p-8">
       <div className="mb-4 flex items-center gap-4 flex-wrap">
-        <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">
+        <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">
           ← Back to course
         </Link>
         <h1 className="text-xl font-semibold">Preview: {course.title}</h1>

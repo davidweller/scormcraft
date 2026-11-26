@@ -85,14 +85,14 @@ export function CourseMetadata({
             onBlur={() => handleSave()}
             onKeyDown={handleKeyDown}
             disabled={saving}
-            className="min-w-[200px] rounded border border-gray-300 px-2 py-1 text-2xl font-bold focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="min-w-[200px] rounded border border-gray-300 px-2 py-1 text-2xl font-bold focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             autoFocus
           />
         ) : (
           <button
             type="button"
             onClick={() => setEditing(true)}
-            className="text-left text-2xl font-bold text-gray-900 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded"
+            className="text-left text-2xl font-bold text-gray-900 hover:text-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-1 rounded"
           >
             {title}
           </button>
@@ -113,7 +113,7 @@ export function CourseMetadata({
         <span>{completion}% built</span>
         <div className="h-2 w-24 rounded-full bg-gray-200 overflow-hidden">
           <div
-            className="h-full rounded-full bg-blue-500 transition-all"
+            className="h-full rounded-full bg-brand-500 transition-all"
             style={{ width: `${completion}%` }}
           />
         </div>

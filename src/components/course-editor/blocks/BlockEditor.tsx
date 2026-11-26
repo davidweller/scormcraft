@@ -270,7 +270,7 @@ function HeadingBlockEditor({
           setLevel(v);
           onSave({ level: v, text });
         }}
-        className="rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
         <option value={1}>Heading 1</option>
         <option value={2}>Heading 2</option>
@@ -282,7 +282,7 @@ function HeadingBlockEditor({
         onChange={(e) => setText(e.target.value)}
         onBlur={() => onSave({ level, text })}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm font-semibold transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm font-semibold transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Heading text…"
       />
     </div>
@@ -322,13 +322,13 @@ function ImageBlockEditor({
           onChange={(e) => setUrl(e.target.value)}
           onBlur={() => onSave({ url, alt, caption })}
           onKeyDown={handleKeyDown}
-          className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Image URL"
         />
         <button
           type="button"
           onClick={() => setShowPicker(true)}
-          className="shrink-0 rounded bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
+          className="shrink-0 rounded bg-brand-50 px-3 py-1 text-sm font-medium text-brand-600 hover:bg-brand-100 transition-colors"
         >
           Browse
         </button>
@@ -339,7 +339,7 @@ function ImageBlockEditor({
         onChange={(e) => setAlt(e.target.value)}
         onBlur={() => onSave({ url, alt, caption })}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Alt text"
       />
       <textarea
@@ -347,7 +347,7 @@ function ImageBlockEditor({
         onChange={(e) => setCaption(e.target.value)}
         onBlur={() => onSave({ url, alt, caption })}
         rows={2}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Description (optional, shown below the image in italics)"
       />
       {url && (
@@ -403,13 +403,13 @@ function VideoEmbedBlockEditor({
           }}
           onBlur={() => onSave({ url, mimeType: sourceType === "upload" ? mimeType : undefined, sourceType })}
           onKeyDown={handleKeyDown}
-          className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="YouTube/Vimeo URL or local MP4 URL"
         />
         <button
           type="button"
           onClick={() => setShowPicker(true)}
-          className="shrink-0 rounded bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
+          className="shrink-0 rounded bg-brand-50 px-3 py-1 text-sm font-medium text-brand-600 hover:bg-brand-100 transition-colors"
         >
           Browse MP4
         </button>
@@ -496,7 +496,7 @@ function FileDownloadBlockEditor({
         <button
           type="button"
           onClick={() => setShowPicker(true)}
-          className="shrink-0 rounded bg-indigo-50 px-3 py-1 text-sm font-medium text-indigo-600 hover:bg-indigo-100 transition-colors"
+          className="shrink-0 rounded bg-brand-50 px-3 py-1 text-sm font-medium text-brand-600 hover:bg-brand-100 transition-colors"
         >
           {file.url ? "Replace file" : "Choose file"}
         </button>
@@ -507,7 +507,7 @@ function FileDownloadBlockEditor({
         onChange={(e) => setLabel(e.target.value)}
         onBlur={() => onSave({ ...file, label, description })}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Link text (e.g. Practice data spreadsheet)"
       />
       <input
@@ -516,7 +516,7 @@ function FileDownloadBlockEditor({
         onChange={(e) => setDescription(e.target.value)}
         onBlur={() => onSave({ ...file, label, description })}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Description (optional)"
       />
       <p className="text-xs text-gray-500">
@@ -575,7 +575,7 @@ function KeyPointBlockEditor({
         onChange={(e) => setTitle(e.target.value)}
         onBlur={() => onSave({ title, text })}
         onKeyDown={handleInputKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm font-medium transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm font-medium transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Key point title (optional)"
       />
       <RichTextEditor
@@ -618,7 +618,7 @@ function TableBlockEditor({
             }}
             onKeyDown={handleKeyDown}
             rows={8}
-            className="w-full rounded border border-gray-200 px-2 py-1 font-mono text-xs transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-200 px-2 py-1 font-mono text-xs transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="<table>...</table>"
           />
         </>
@@ -629,7 +629,7 @@ function TableBlockEditor({
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="text-xs text-blue-600 hover:underline"
+              className="text-xs text-brand-600 hover:underline"
             >
               Edit HTML
             </button>
@@ -690,7 +690,7 @@ function MultipleChoiceEditor({
         onChange={(e) => setQuestion(e.target.value)}
         onBlur={save}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="Question text…"
       />
       <label className="block text-xs font-medium text-gray-500">Options (select correct)</label>
@@ -716,7 +716,7 @@ function MultipleChoiceEditor({
             }}
             onBlur={save}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder={`Option ${i + 1}`}
           />
           {options.length > 2 && (
@@ -745,7 +745,7 @@ function MultipleChoiceEditor({
         onClick={() => {
           setOptions([...options, ""]);
         }}
-        className="text-xs text-blue-600 hover:underline"
+        className="text-xs text-brand-600 hover:underline"
       >
         + Add option
       </button>
@@ -757,7 +757,7 @@ function MultipleChoiceEditor({
           onChange={(e) => setExplanation(e.target.value)}
           onBlur={save}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Shown after answer"
         />
       </div>
@@ -793,7 +793,7 @@ function TrueFalseEditor({
         onChange={(e) => setQuestion(e.target.value)}
         onBlur={save}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="True or false statement…"
       />
       <div className="flex items-center gap-4">
@@ -828,7 +828,7 @@ function TrueFalseEditor({
           onChange={(e) => setExplanation(e.target.value)}
           onBlur={save}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Shown after answer"
         />
       </div>
@@ -860,7 +860,7 @@ function ReflectionEditor({
         onBlur={() => onSave({ prompt })}
         onKeyDown={handleKeyDown}
         rows={2}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="e.g. What did you find most useful?"
       />
     </div>
@@ -907,7 +907,7 @@ function DragAndDropEditor({
         onChange={(e) => setQuestion(e.target.value)}
         onBlur={save}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="e.g. Put these steps in order…"
       />
       <label className="block text-xs font-medium text-gray-500">Items (in correct order)</label>
@@ -925,7 +925,7 @@ function DragAndDropEditor({
             }}
             onBlur={save}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder={`Item ${i + 1}`}
           />
           {items.length > 2 && (
@@ -947,7 +947,7 @@ function DragAndDropEditor({
       <button
         type="button"
         onClick={() => setItems([...items, ""])}
-        className="text-xs text-blue-600 hover:underline"
+        className="text-xs text-brand-600 hover:underline"
       >
         + Add item
       </button>
@@ -959,7 +959,7 @@ function DragAndDropEditor({
           onChange={(e) => setExplanation(e.target.value)}
           onBlur={save}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Shown after answer"
         />
       </div>
@@ -1007,7 +1007,7 @@ function MatchingEditor({
         onChange={(e) => setQuestion(e.target.value)}
         onBlur={save}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="e.g. Match the terms to their definitions…"
       />
       <label className="block text-xs font-medium text-gray-500">Pairs (left matches right)</label>
@@ -1023,7 +1023,7 @@ function MatchingEditor({
             }}
             onBlur={save}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="Left item"
           />
           <span className="text-gray-400">↔</span>
@@ -1037,7 +1037,7 @@ function MatchingEditor({
             }}
             onBlur={save}
             onKeyDown={handleKeyDown}
-            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="Right item"
           />
           {pairs.length > 2 && (
@@ -1058,7 +1058,7 @@ function MatchingEditor({
       <button
         type="button"
         onClick={() => setPairs([...pairs, { left: "", right: "" }])}
-        className="text-xs text-blue-600 hover:underline"
+        className="text-xs text-brand-600 hover:underline"
       >
         + Add pair
       </button>
@@ -1070,7 +1070,7 @@ function MatchingEditor({
           onChange={(e) => setExplanation(e.target.value)}
           onBlur={save}
           onKeyDown={handleKeyDown}
-          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           placeholder="Shown after answer"
         />
       </div>
@@ -1116,7 +1116,7 @@ function DialogCardsEditor({
         onChange={(e) => setTitle(e.target.value)}
         onBlur={save}
         onKeyDown={handleKeyDown}
-        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
         placeholder="e.g. Key Terms Review"
       />
       <label className="block text-xs font-medium text-gray-500">Cards (non-graded flip cards)</label>
@@ -1148,7 +1148,7 @@ function DialogCardsEditor({
             }}
             onBlur={save}
             onKeyDown={handleKeyDown}
-            className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="Front (question/term)"
           />
           <textarea
@@ -1161,7 +1161,7 @@ function DialogCardsEditor({
             onBlur={save}
             onKeyDown={handleKeyDown}
             rows={2}
-            className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="Back (answer/definition)"
           />
         </div>
@@ -1169,7 +1169,7 @@ function DialogCardsEditor({
       <button
         type="button"
         onClick={() => setCards([...cards, { front: "", back: "" }])}
-        className="text-xs text-blue-600 hover:underline"
+        className="text-xs text-brand-600 hover:underline"
       >
         + Add card
       </button>

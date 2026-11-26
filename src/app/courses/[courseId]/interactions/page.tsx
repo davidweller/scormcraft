@@ -93,7 +93,7 @@ function getTypeLabel(type: string): string {
 function getTypeBadgeClass(type: string): string {
   switch (type) {
     case "multiple_choice":
-      return "bg-blue-100 text-blue-800";
+      return "bg-brand-100 text-brand-800";
     case "true_false":
       return "bg-green-100 text-green-800";
     case "reflection":
@@ -138,7 +138,7 @@ export default async function InteractionsPage({
             </p>
             <Link
               href={`/courses/${courseId}/edit`}
-              className="mt-4 inline-flex items-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              className="mt-4 inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
             >
               Go to editor
             </Link>
@@ -162,7 +162,7 @@ export default async function InteractionsPage({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200 bg-surface">
                 {interactions.map(({ block, page, lesson, module }) => {
                   const questionText = block.data.question ?? block.data.prompt ?? "—";
                   const truncated = questionText.length > 80 ? questionText.slice(0, 80) + "…" : questionText;
@@ -188,7 +188,7 @@ export default async function InteractionsPage({
                       <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
                         <Link
                           href={`/courses/${courseId}/edit/page/${page.id}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-brand-600 hover:underline"
                         >
                           Edit
                         </Link>

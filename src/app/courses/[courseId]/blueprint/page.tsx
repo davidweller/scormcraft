@@ -245,7 +245,7 @@ export default function BlueprintPage() {
   if (error && !course) {
     return (
       <main className="min-h-screen p-8">
-        <Link href="/courses" className="text-blue-600 hover:underline">← Courses</Link>
+        <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error}</p>
       </main>
     );
@@ -256,7 +256,7 @@ export default function BlueprintPage() {
       <div className="mx-auto max-w-3xl">
         <div className="flex items-center justify-between">
           <div>
-            <Link href={`/courses/${courseId}`} className="text-blue-600 hover:underline">← Course</Link>
+            <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
             <h1 className="mt-2 text-2xl font-bold">Course blueprint</h1>
             <p className="mt-1 text-sm text-gray-500">{course?.title}</p>
           </div>
@@ -421,7 +421,7 @@ export default function BlueprintPage() {
                     </li>
                   ))}
                   <li>
-                    <button type="button" onClick={() => addLesson(i)} className="text-sm text-blue-600 hover:underline">
+                    <button type="button" onClick={() => addLesson(i)} className="text-sm text-brand-600 hover:underline">
                       + Lesson
                     </button>
                   </li>
@@ -436,7 +436,7 @@ export default function BlueprintPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save blueprint"}
           </button>

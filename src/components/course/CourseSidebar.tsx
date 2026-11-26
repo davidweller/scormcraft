@@ -68,14 +68,14 @@ export function CourseSidebar({ courseId }: { courseId: string }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="fixed left-4 top-4 z-20 rounded border border-gray-200 bg-white px-3 py-2 text-sm shadow lg:hidden"
+        className="fixed left-4 top-4 z-20 rounded border border-gray-200 bg-surface px-3 py-2 text-sm shadow lg:hidden"
         aria-label="Toggle sidebar"
       >
         {open ? "Close" : "Menu"}
       </button>
 
       <aside
-        className={`fixed inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-gray-200 bg-white shadow-sm transition-transform lg:static lg:z-0 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-gray-200 bg-surface shadow-sm transition-transform lg:static lg:z-0 lg:shadow-none ${
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
@@ -124,11 +124,11 @@ export function CourseSidebar({ courseId }: { courseId: string }) {
                       onClick={() => setOpen(false)}
                       className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                         active
-                          ? "bg-blue-50 text-blue-700"
+                          ? "bg-brand-50 text-brand-700"
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
-                      <Icon className={`h-4 w-4 ${active ? "text-blue-600" : "text-gray-500"}`} />
+                      <Icon className={`h-4 w-4 ${active ? "text-brand-600" : "text-gray-500"}`} />
                       {item.label}
                     </Link>
                   );

@@ -43,7 +43,7 @@ export function CourseEditorShell({ selectedPageId }: { selectedPageId: string |
   if (error || !course) {
     return (
       <div className="min-h-screen p-8">
-        <Link href="/courses" className="text-blue-600 hover:underline">← Courses</Link>
+        <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error || "Course not found"}</p>
       </div>
     );
@@ -54,7 +54,7 @@ export function CourseEditorShell({ selectedPageId }: { selectedPageId: string |
   return (
     <div className="flex min-h-screen">
       <aside className="w-72 shrink-0 border-r border-gray-200 bg-gray-50 p-4">
-        <Link href={`/courses/${courseId}`} className="text-sm text-blue-600 hover:underline">
+        <Link href={`/courses/${courseId}`} className="text-sm text-brand-600 hover:underline">
           ← Back to course
         </Link>
         <h2 className="mt-2 truncate text-lg font-semibold" title={course.title}>
