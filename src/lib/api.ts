@@ -233,3 +233,34 @@ export interface BlockApiResponse {
   data: Record<string, unknown>;
   order: number;
 }
+
+/** Saves a rearranged outline. See src/lib/outline.ts for building one. */
+export async function saveStructure(
+  courseId: string,
+  outline: { modules: { id: string; lessons: { id: string; pages: string[] }[] }[] }
+) {
+  return json<{ success: boolean }>(
+    await fetch(`${base}/api/courses/${courseId}/structure`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(outline),
+    })
+  );
+}
+
+/** Copies a lesson or page, placing the copy after the original. */
+export async function duplicateOutlineItem(courseId: string, kind: "lesson" | "page", id: string) {
+  return json<{ id: string; pageId: string | null }>(
+    await fetch(`${base}/api/courses/${courseId}/duplicate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, id }),
+    })
+  );
+}
+
+export async function duplicateModule(courseId: string, moduleId: string) {
+  return json<{ id: string }>(
+    await fetch(`${base}/api/courses/${courseId}/modules/${moduleId}/duplicate`, { method: "POST" })
+  );
+}

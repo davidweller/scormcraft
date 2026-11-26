@@ -1,5 +1,4 @@
-import { CourseEditorShell } from "@/components/course-editor/CourseEditorShell";
-
+// The editor is rendered by layout.tsx. This route only has to exist.
 export default function EditCoursePage() {
-  return <CourseEditorShell selectedPageId={null} />;
+  return null;
 }

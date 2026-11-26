@@ -23,16 +23,23 @@ function countPages(course: {
 
 export default async function PreviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseId: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const { courseId } = await params;
+  const { page } = await searchParams;
   const course = await getCourse(courseId);
   if (!course) notFound();
 
   const totalPages = countPages(course);
   const baseUrl = getBaseUrl();
-  const iframeSrc = `${baseUrl}/api/courses/${courseId}/preview/page/0`;
+  // ?page=N opens the preview at that page, for "Preview page" in the editor.
+  const requested = Number.parseInt(page ?? "0", 10);
+  const startIndex =
+    Number.isInteger(requested) && requested >= 0 && requested < totalPages ? requested : 0;
+  const iframeSrc = `${baseUrl}/api/courses/${courseId}/preview/page/${startIndex}`;
   const noContent = totalPages === 0;
 
   return (
