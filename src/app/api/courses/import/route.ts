@@ -174,6 +174,9 @@ async function createCourseFromImport(data: ImportedCourseData) {
       tone: data.tone || null,
       ilos: data.ilos.length > 0 ? (data.ilos as Prisma.InputJsonValue) : JsonNull,
       assessmentPlan: data.assessmentPlan ? (data.assessmentPlan as Prisma.InputJsonValue) : JsonNull,
+      // Marks the course as imported, so the build stages stop steering the
+      // author towards generating over content they already have.
+      settings: { source: "document" },
     },
   });
 

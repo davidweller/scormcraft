@@ -195,7 +195,14 @@ export function getCourseIssues(course: CourseApiResponse): CourseIssue[] {
   return issues;
 }
 
+/** True for courses created by importing a document or a SCORM package. */
+export function isImportedCourse(course: { settings?: unknown }): boolean {
+  const source = (course.settings as { source?: unknown } | null | undefined)?.source;
+  return source === "document" || source === "scorm";
+}
+
 export function getFlowCompletionV2(course: CourseApiResponse): FlowCompletionV2 {
+  const imported = isImportedCourse(course);
   const { totalModules, totalLessons, totalPages, totalInteractions } = getCourseCounts(course);
   const completion = getCourseCompletion(course);
   const issues = getCourseIssues(course);
@@ -215,6 +222,11 @@ export function getFlowCompletionV2(course: CourseApiResponse): FlowCompletionV2
     if (!hasStructure) {
       return { status: "in_progress", subtext: "Add modules & lessons", isComplete: false };
     }
+    // An imported course arrives with its outline. A missing overview is not
+    // a reason to send the author back to the blueprint.
+    if (imported) {
+      return { status: "complete", subtext: "Imported outline", isComplete: true };
+    }
     if (!hasOverview) {
       return { status: "in_progress", subtext: "Add course overview", isComplete: false };
     }
@@ -227,6 +239,11 @@ export function getFlowCompletionV2(course: CourseApiResponse): FlowCompletionV2
     }
     if (!hasContent) {
       return { status: "not_started", subtext: "Not started", isComplete: false };
+    }
+    // Imported content counts as done. Empty pages are for the author to fill
+    // in the editor, not a cue to generate.
+    if (imported) {
+      return { status: "complete", subtext: "Imported content", isComplete: true };
     }
     if (!allPagesHaveContent) {
       const pagesWithoutContent = totalPages - Math.round((completion / 100) * totalPages);
@@ -252,6 +269,9 @@ export function getFlowCompletionV2(course: CourseApiResponse): FlowCompletionV2
     }
     
     if (!hasInteractions) {
+      if (imported) {
+        return { status: "complete", subtext: "Optional", isComplete: true };
+      }
       return { status: "not_started", subtext: "No interactions yet", isComplete: false };
     }
 

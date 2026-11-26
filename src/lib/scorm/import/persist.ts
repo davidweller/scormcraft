@@ -50,6 +50,7 @@ export async function persistScormImport(
           ilos: jsonOrNull(draft.ilos),
           assessmentPlan: jsonOrNull(draft.assessmentPlan),
           interactionConfig: jsonOrNull(draft.interactionConfig),
+          settings: { source: "scorm" },
           // NOTE: draft.scormMetadata is not written yet — Course has no
           // scormMetadata column until the Phase 5 migration adds one. It is
           // always null today, so nothing is being dropped.
