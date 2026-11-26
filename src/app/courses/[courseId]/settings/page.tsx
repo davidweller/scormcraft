@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingLines } from "@/components/ui";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useConfirm } from "@/components/ui";
@@ -244,7 +245,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <main className="p-6 lg:p-8">
-        <p className="text-gray-500">Loading…</p>
+        <LoadingLines />
       </main>
     );
   }

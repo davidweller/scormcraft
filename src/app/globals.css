@@ -38,6 +38,38 @@
     --brand-700: 29 78 216;
     --brand-800: 30 64 175;
     --brand-900: 30 58 138;
+
+    /* Status colours: red for errors and deletes, amber for warnings, green for success. */
+    --red-50: 254 242 242;
+    --red-100: 254 226 226;
+    --red-200: 254 202 202;
+    --red-300: 252 165 165;
+    --red-400: 248 113 113;
+    --red-500: 239 68 68;
+    --red-600: 220 38 38;
+    --red-700: 185 28 28;
+    --red-800: 153 27 27;
+    --red-900: 127 29 29;
+    --amber-50: 255 251 235;
+    --amber-100: 254 243 199;
+    --amber-200: 253 230 138;
+    --amber-300: 252 211 77;
+    --amber-400: 251 191 36;
+    --amber-500: 245 158 11;
+    --amber-600: 217 119 6;
+    --amber-700: 180 83 9;
+    --amber-800: 146 64 14;
+    --amber-900: 120 53 15;
+    --green-50: 240 253 244;
+    --green-100: 220 252 231;
+    --green-200: 187 247 208;
+    --green-300: 134 239 172;
+    --green-400: 74 222 128;
+    --green-500: 34 197 94;
+    --green-600: 22 163 74;
+    --green-700: 21 128 61;
+    --green-800: 22 101 52;
+    --green-900: 20 83 45;
   }
 
   .dark {
@@ -70,6 +102,38 @@
     --brand-700: 99 152 250;
     --brand-800: 147 187 253;
     --brand-900: 191 219 254;
+
+    /* Status colours, reversed like the greys: 50 is the darkest tint, 900 the lightest text. */
+    --red-50: 48 20 22;
+    --red-100: 66 24 26;
+    --red-200: 100 32 34;
+    --red-300: 140 44 44;
+    --red-400: 200 64 64;
+    --red-500: 229 72 72;
+    --red-600: 235 88 88;
+    --red-700: 248 140 140;
+    --red-800: 252 180 180;
+    --red-900: 254 215 215;
+    --amber-50: 46 34 12;
+    --amber-100: 62 45 14;
+    --amber-200: 96 68 18;
+    --amber-300: 133 94 20;
+    --amber-400: 190 136 24;
+    --amber-500: 230 160 30;
+    --amber-600: 240 175 50;
+    --amber-700: 247 196 96;
+    --amber-800: 250 215 140;
+    --amber-900: 253 232 180;
+    --green-50: 16 40 26;
+    --green-100: 20 54 33;
+    --green-200: 26 80 46;
+    --green-300: 34 110 62;
+    --green-400: 44 150 82;
+    --green-500: 52 180 96;
+    --green-600: 70 195 112;
+    --green-700: 120 220 150;
+    --green-800: 165 235 185;
+    --green-900: 200 245 215;
   }
 
   body {
@@ -82,4 +146,22 @@
     outline: 2px solid rgb(var(--brand-500));
     outline-offset: 2px;
   }
+}
+
+/* Rich text follows the theme, not the typography plugin's own greys. */
+.prose {
+  --tw-prose-body: rgb(var(--gray-700));
+  --tw-prose-headings: rgb(var(--gray-900));
+  --tw-prose-lead: rgb(var(--gray-600));
+  --tw-prose-links: rgb(var(--brand-600));
+  --tw-prose-bold: rgb(var(--gray-900));
+  --tw-prose-counters: rgb(var(--gray-500));
+  --tw-prose-bullets: rgb(var(--gray-400));
+  --tw-prose-hr: rgb(var(--gray-200));
+  --tw-prose-quotes: rgb(var(--gray-900));
+  --tw-prose-quote-borders: rgb(var(--gray-200));
+  --tw-prose-captions: rgb(var(--gray-500));
+  --tw-prose-code: rgb(var(--gray-900));
+  --tw-prose-th-borders: rgb(var(--gray-300));
+  --tw-prose-td-borders: rgb(var(--gray-200));
 }

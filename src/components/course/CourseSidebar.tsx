@@ -13,6 +13,7 @@ import {
   Cog6ToothIcon,
   PaintBrushIcon,
   PencilSquareIcon,
+  RocketLaunchIcon,
   SparklesIcon,
   Squares2X2Icon,
   ClockIcon,
@@ -31,6 +32,7 @@ const BUILD_STAGES = [
 const COURSE_ITEMS = [
   { path: "", label: "Overview", icon: Squares2X2Icon },
   { path: "edit", label: "Edit content", icon: PencilSquareIcon },
+  { path: "build", label: "Build with AI", icon: RocketLaunchIcon },
   { path: "interactions", label: "Interactions", icon: SparklesIcon },
   { path: "branding", label: "Branding", icon: PaintBrushIcon },
   { path: "history", label: "History", icon: ClockIcon },

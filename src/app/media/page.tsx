@@ -139,12 +139,6 @@ export default function MediaLibraryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="text-gray-500 hover:text-gray-700 text-sm"
-              >
-                &larr; Back
-              </Link>
               <h1 className="text-xl font-semibold text-gray-900">Media Library</h1>
             </div>
             <div className="flex items-center gap-3">

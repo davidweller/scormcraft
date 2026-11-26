@@ -126,13 +126,13 @@ export function RichTextEditor({
           font-style: italic;
         }
         .rich-text-editor .ProseMirror a {
-          color: #2563eb;
+          color: rgb(var(--brand-600));
           text-decoration: underline;
         }
         .rich-text-editor .ProseMirror .is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
-          color: #9ca3af;
+          color: rgb(var(--gray-400));
           pointer-events: none;
           height: 0;
         }

@@ -337,6 +337,16 @@ export function getNextRecommendedAction(course: CourseApiResponse): {
 } {
   const flow = getFlowCompletionV2(course);
 
+  // An empty course that wasn't imported: offer the guided build first.
+  if (!isImportedCourse(course) && getCourseCounts(course).totalLessons === 0) {
+    return {
+      stage: "blueprint",
+      label: "Build with AI",
+      description: "Draft an outline, approve it, then have the lessons written",
+      href: `/courses/${course.id}/build`,
+    };
+  }
+
   if (!flow.blueprint.isComplete) {
     return {
       stage: "blueprint",

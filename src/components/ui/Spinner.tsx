@@ -37,3 +37,15 @@ export function PageSkeleton({ label = "Loading" }: { label?: string }) {
     </div>
   );
 }
+
+/** Placeholder lines for a page that is loading inside an existing frame. */
+export function LoadingLines({ label = "Loading" }: { label?: string }) {
+  return (
+    <div className="mx-auto max-w-3xl space-y-4" role="status" aria-label={label}>
+      <Skeleton className="h-8 w-1/2" />
+      <Skeleton className="h-4 w-1/3" />
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-24 w-full" />
+    </div>
+  );
+}

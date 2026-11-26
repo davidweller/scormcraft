@@ -8,6 +8,8 @@ function scale(name: string, steps: number[]): Record<number, string> {
   );
 }
 
+const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -21,8 +23,12 @@ const config: Config = {
         // Use `brand` for anything that is the app's own colour, `gray` for
         // neutrals and `surface` for card and panel backgrounds. Avoid
         // `bg-white` and raw `blue-*` or `indigo-*`: they ignore the theme.
-        brand: scale("brand", [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        brand: scale("brand", STEPS),
         gray: scale("gray", [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]),
+        // Status colours, themed the same way.
+        red: scale("red", STEPS),
+        amber: scale("amber", STEPS),
+        green: scale("green", STEPS),
         surface: "rgb(var(--surface) / <alpha-value>)",
         page: "rgb(var(--page) / <alpha-value>)",
       },

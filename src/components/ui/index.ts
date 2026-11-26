@@ -5,4 +5,4 @@ export { Dialog } from "./Dialog";
 export { FeedbackProvider, useConfirm, useToast } from "./Feedback";
 export type { ConfirmOptions, ToastOptions } from "./Feedback";
 export { Field, Input, Select, Textarea } from "./Form";
-export { PageSkeleton, Skeleton, Spinner } from "./Spinner";
+export { LoadingLines, PageSkeleton, Skeleton, Spinner } from "./Spinner";

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useConfirm, useToast } from "@/components/ui";
+import { ButtonLink, EmptyState, Skeleton, useConfirm, useToast } from "@/components/ui";
 
 type CourseItem = { id: string; title: string; overview: string | null; updatedAt: string };
 
@@ -76,13 +76,21 @@ export default function CoursesPage() {
         </Link>
       </div>
       {loading ? (
-        <p className="text-gray-500">Loading courses…</p>
+        <div className="space-y-3" role="status" aria-label="Loading courses">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
       ) : loadFailed ? (
         <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           Couldn&apos;t load your courses. Reload the page to try again.
         </p>
       ) : !courses || courses.length === 0 ? (
-        <p className="text-gray-600">No courses yet. Create one to get started.</p>
+        <EmptyState
+          title="No courses yet"
+          description="Create one with AI, import a document, or start from a blank course."
+          action={<ButtonLink href="/courses/new">New course</ButtonLink>}
+        />
       ) : (
         <ul className="space-y-3">
           {courses.map((c) => (

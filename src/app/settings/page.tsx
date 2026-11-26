@@ -119,9 +119,6 @@ export default function AppSettingsPage() {
     <main className="min-h-[calc(100vh-3rem)] bg-gray-50/40 p-6 lg:p-8">
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
-          <Link href="/" className="text-sm text-brand-600 hover:underline">
-            ← Home
-          </Link>
           <h1 className="mt-2 text-2xl font-bold">Settings</h1>
           <p className="mt-1 text-sm text-gray-500">
             Which AI writes your content, and the keys it uses. A course can override these in its own settings.

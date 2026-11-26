@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingLines } from "@/components/ui";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -151,14 +152,13 @@ export default function GeneratePagesPage() {
   if (loading) {
     return (
       <main className="min-h-[calc(100vh-3rem)] p-8">
-        <p className="text-gray-500">Loading…</p>
+        <LoadingLines />
       </main>
     );
   }
   if (error && !course) {
     return (
       <main className="min-h-[calc(100vh-3rem)] p-8">
-        <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error}</p>
       </main>
     );
@@ -168,7 +168,6 @@ export default function GeneratePagesPage() {
     <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mx-auto max-w-2xl">
         <div>
-          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
           <h1 className="mt-2 text-2xl font-bold">Generate Lessons</h1>
           <p className="mt-1 text-sm text-gray-500">{course?.title}</p>
         </div>

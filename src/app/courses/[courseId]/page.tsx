@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ButtonLink, EmptyState } from "@/components/ui";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/base-url";
 import type { CourseApiResponse } from "@/lib/api";
@@ -29,12 +29,6 @@ export default async function CoursePage({
   return (
     <main className="min-h-[calc(100vh-3rem)] p-6 lg:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex items-center gap-4">
-          <Link href="/courses" className="text-brand-600 hover:underline">
-            ← Courses
-          </Link>
-        </div>
-
         <NextActionPanel course={course} />
 
         <div className="rounded-lg border border-gray-200 bg-surface p-6 shadow-sm">
@@ -52,18 +46,18 @@ export default async function CoursePage({
             <ModuleList courseId={courseId} course={course} />
           </div>
         ) : (
-          <div className="rounded-lg border border-gray-200 bg-gray-50/50 p-8 text-center shadow-sm">
-            <p className="font-medium text-gray-800">No lessons yet.</p>
-            <p className="mt-1 text-sm text-gray-600">
-              Generate from ILOs or add manually via the Blueprint.
-            </p>
-            <Link
-              href={`/courses/${courseId}/blueprint`}
-              className="mt-4 inline-flex items-center rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-brand-700"
-            >
-              Complete Blueprint
-            </Link>
-          </div>
+          <EmptyState
+            title="This course is empty"
+            description="Have the AI draft an outline for you to approve, or add modules, lessons and pages yourself."
+            action={
+              <>
+                <ButtonLink href={`/courses/${courseId}/build`}>Build with AI</ButtonLink>
+                <ButtonLink href={`/courses/${courseId}/edit`} variant="secondary">
+                  Open the editor
+                </ButtonLink>
+              </>
+            }
+          />
         )}
       </div>
     </main>
