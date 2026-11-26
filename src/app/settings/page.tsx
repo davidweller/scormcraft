@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -37,6 +38,7 @@ export default function AppSettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const confirm = useConfirm();
   const [refreshing, setRefreshing] = useState(false);
   const [newKeys, setNewKeys] = useState<Record<KeyName, string>>({ openai: "", anthropic: "", gemini: "" });
   const [models, setModels] = useState<Partial<Record<ProviderId, string>>>({});
@@ -232,8 +234,14 @@ export default function AppSettingsPage() {
                       <button
                         type="button"
                         disabled={saving}
-                        onClick={() => {
-                          if (confirm(`Remove the saved ${label.title} key?`)) void save({ apiKeys: { [k]: null } }, "Key removed.");
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: `Remove the ${label.title} key?`,
+                            message: "Courses that rely on this key will stop generating until another provider is set up.",
+                            confirmLabel: "Remove key",
+                            danger: true,
+                          });
+                          if (ok) void save({ apiKeys: { [k]: null } }, "Key removed.");
                         }}
                         className="text-sm text-red-600 hover:underline disabled:opacity-50"
                       >

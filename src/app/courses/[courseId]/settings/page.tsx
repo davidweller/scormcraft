@@ -2,6 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useConfirm } from "@/components/ui";
 
 interface CourseSettings {
   aiProvider?: string;
@@ -132,9 +133,17 @@ export default function SettingsPage() {
     }
   }
 
+  const confirm = useConfirm();
+
   async function handleClearApiKey(keyType: "openai" | "anthropic" | "gemini") {
     const keyName = { openai: "OpenAI", anthropic: "Anthropic", gemini: "Gemini" }[keyType];
-    if (!confirm(`Remove the stored ${keyName} API key?`)) return;
+    const ok = await confirm({
+      title: `Remove the ${keyName} key?`,
+      message: "This course will go back to the app's default AI provider.",
+      confirmLabel: "Remove key",
+      danger: true,
+    });
+    if (!ok) return;
     setSaving(true);
     setError(null);
     try {
@@ -160,9 +169,13 @@ export default function SettingsPage() {
   }
 
   async function handleDelete() {
-    if (!confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Delete this course?",
+      message: "The course and everything in it will be deleted. This can't be undone.",
+      confirmLabel: "Delete course",
+      danger: true,
+    });
+    if (!ok) return;
     setDeleting(true);
     setError(null);
     try {

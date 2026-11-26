@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useConfirm, useToast } from "@/components/ui";
 
 type CourseItem = { id: string; title: string; overview: string | null; updatedAt: string };
 
@@ -9,16 +10,25 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<CourseItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const confirm = useConfirm();
+  const toast = useToast();
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/courses")
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load");
+        return res.json();
+      })
       .then((data: CourseItem[]) => {
         if (!cancelled) setCourses(data);
       })
       .catch(() => {
-        if (!cancelled) setCourses([]);
+        if (!cancelled) {
+          setCourses([]);
+          setLoadFailed(true);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -31,17 +41,24 @@ export default function CoursesPage() {
   async function handleDelete(e: React.MouseEvent, courseId: string, title: string) {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: "Delete this course?",
+      message: `"${title}" and everything in it will be deleted. This can't be undone.`,
+      confirmLabel: "Delete course",
+      danger: true,
+    });
+    if (!ok) return;
     setDeletingId(courseId);
     try {
       const res = await fetch(`/api/courses/${courseId}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
         setCourses((prev) => prev?.filter((c) => c.id !== courseId) ?? null);
+        toast("Course deleted");
+      } else {
+        toast({ message: `Couldn't delete "${title}". Try again.`, tone: "error" });
       }
     } catch {
-      // Silently fail, user can try again
+      toast({ message: `Couldn't delete "${title}". Try again.`, tone: "error" });
     } finally {
       setDeletingId(null);
     }
@@ -60,6 +77,10 @@ export default function CoursesPage() {
       </div>
       {loading ? (
         <p className="text-gray-500">Loading courses…</p>
+      ) : loadFailed ? (
+        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Couldn&apos;t load your courses. Reload the page to try again.
+        </p>
       ) : !courses || courses.length === 0 ? (
         <p className="text-gray-600">No courses yet. Create one to get started.</p>
       ) : (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useConfirm } from "@/components/ui";
 
 interface BlueprintLesson {
   /** Set for lessons that already exist, so saving keeps their content. */
@@ -41,6 +42,7 @@ export default function BlueprintPage() {
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const confirm = useConfirm();
 
   const loadCourse = useCallback(async () => {
     setError(null);
@@ -132,9 +134,13 @@ export default function BlueprintPage() {
         removed.modules > 0 ? `${removed.modules} module${removed.modules === 1 ? "" : "s"}` : "",
         removed.lessons > 0 ? `${removed.lessons} lesson${removed.lessons === 1 ? "" : "s"}` : "",
       ].filter(Boolean);
-      const ok = window.confirm(
-        `Saving will delete ${parts.join(" and ")} no longer in the blueprint, along with any content written there. Continue?`
-      );
+      const ok = await confirm({
+        title: `Delete ${parts.join(" and ")}?`,
+        message:
+          "They are no longer in the blueprint. Saving deletes them, along with any content written in them. This can't be undone.",
+        confirmLabel: "Save and delete",
+        danger: true,
+      });
       if (!ok) return false;
     }
     setSaving(true);

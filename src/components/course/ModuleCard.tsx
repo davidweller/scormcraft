@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ModuleApiResponse } from "@/lib/api";
 import { getModuleStats } from "@/lib/course-tree";
+import { useConfirm, useToast } from "@/components/ui";
 
 export function ModuleCard({
   courseId,
@@ -20,11 +21,20 @@ export function ModuleCard({
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
 
+  const confirm = useConfirm();
+  const toast = useToast();
+
   const stats = getModuleStats(mod);
   const lessons = mod.lessons ?? [];
 
   async function handleDelete() {
-    if (!confirm(`Delete "${mod.title}" and all its lessons and pages?`)) return;
+    const ok = await confirm({
+      title: "Delete this module?",
+      message: `"${mod.title}" and all its lessons and pages will be deleted. This can't be undone.`,
+      confirmLabel: "Delete module",
+      danger: true,
+    });
+    if (!ok) return;
     setDeleting(true);
     try {
       const res = await fetch(`/api/courses/${courseId}/modules/${mod.id}`, { method: "DELETE" });
@@ -33,7 +43,7 @@ export function ModuleCard({
         router.refresh();
       } else {
         const data = await res.json().catch(() => ({}));
-        alert((data as { error?: string }).error || "Failed to delete");
+        toast({ message: (data as { error?: string }).error || "Failed to delete", tone: "error" });
       }
     } finally {
       setDeleting(false);
@@ -49,7 +59,7 @@ export function ModuleCard({
       if (res.ok) router.refresh();
       else {
         const data = await res.json().catch(() => ({}));
-        alert((data as { error?: string }).error || "Failed to duplicate");
+        toast({ message: (data as { error?: string }).error || "Failed to duplicate", tone: "error" });
       }
     } finally {
       setDuplicating(false);

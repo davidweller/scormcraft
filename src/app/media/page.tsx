@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { Media, MediaListResponse } from "@/types/media";
+import { useConfirm } from "@/components/ui";
 
 type GenerationStyle = "photorealistic" | "illustration" | "flat" | "3d";
 type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
@@ -106,8 +107,16 @@ export default function MediaLibraryPage() {
     }
   }
 
+  const confirm = useConfirm();
+
   async function handleDelete(id: string) {
-    if (!confirm("Delete this image? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Delete this image?",
+      message: "Pages that use it will show a broken image. This can't be undone.",
+      confirmLabel: "Delete image",
+      danger: true,
+    });
+    if (!ok) return;
 
     try {
       const res = await fetch(`/api/media?id=${id}`, { method: "DELETE" });

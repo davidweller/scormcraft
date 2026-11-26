@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useConfirm } from "@/components/ui";
 
 interface LessonItem {
   id: string;
@@ -53,6 +54,7 @@ export default function GeneratePagesPage() {
   const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
   const [states, setStates] = useState<Record<string, LessonState>>({});
   const cancelRef = useRef(false);
+  const confirm = useConfirm();
 
   const loadCourse = useCallback(async () => {
     setError(null);
@@ -119,9 +121,13 @@ export default function GeneratePagesPage() {
     setError(null);
     const overwrite = hasContent(les.id);
     if (overwrite) {
-      const ok = window.confirm(
-        `Regenerate "${les.title}"?\n\nThe text and headings on this lesson's first page will be replaced with new AI text. Images, tables, files and interactions are kept. This can't be undone.`
-      );
+      const ok = await confirm({
+        title: `Regenerate "${les.title}"?`,
+        message:
+          "The text and headings on this lesson's first page will be replaced with new AI text. Images, tables, files and interactions are kept. This can't be undone.",
+        confirmLabel: "Replace text",
+        danger: true,
+      });
       if (!ok) return;
     }
     await runLesson(les.id, overwrite);
