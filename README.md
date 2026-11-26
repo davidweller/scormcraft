@@ -51,9 +51,26 @@ B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Bu
   - `POST .../pages/[pageId]/interaction-blocks`, `PATCH/DELETE .../interaction-blocks/[blockId]`
 - `POST /api/uploads` — FormData with `file`; returns `{ url }`. Requires `BLOB_READ_WRITE_TOKEN`.
 
+## Starting a course
+
+`/courses/new` offers three ways in:
+
+- **Create with AI**: describe the course, then `/courses/[id]/build` drafts learning outcomes, modules and lessons. You edit and approve the outline, choose whether to add interactions, and the lessons are written one at a time. Nothing is written before the outline is approved, and lessons that already have content are skipped.
+- **Import a course**: a Word or Markdown document, or a package exported from SCORMcraft. Imports open in the editor with their content as written.
+- **Start blank**: an empty course, opened in the editor.
+
+## Protecting content
+
+- Saving the blueprint updates modules and lessons in place. Only ones removed from the blueprint are deleted, after a confirmation.
+- Lesson generation writes into empty lessons only. Regenerating a lesson that has content asks first, and replaces its text and headings but keeps images, tables, files and interactions.
+- "Rewrite with AI" on a block shows the new version beside the current one, with Replace, Insert below and Discard.
+- **History** (`/courses/[id]/history`): a version of the course is saved before a lesson is regenerated, before a module, lesson or page is deleted, and before a blueprint save that removes lessons. Any of the newest 25 can be restored. This uses the `CourseSnapshot` table: the desktop app adds it at startup; the web database needs `npm run db:push` once.
+
 ## Course builder (Phase 2)
 
-- **Edit course** (`/courses/[id]/edit`): Sidebar shows course structure (modules → lessons → pages). Add/rename/delete modules, lessons, and pages. Click a page to edit.
+- **Edit course** (`/courses/[id]/edit`): The outline shows the course structure (modules → lessons → pages). Add, rename, duplicate, delete and reorder modules, lessons and pages, by dragging or from each row's menu. Click a page to edit.
+- **Blocks**: drag a block by its handle, or use Move up and Move down in its menu. The + between two blocks adds one at that position.
+- **Look and feel**: colours, fonts and the UI kit are described in `src/app/globals.css` and `src/components/ui/`. Use the `brand`, `gray` and `surface` colours rather than `bg-white` or raw `blue-*`, so the dark theme keeps working.
 - **Page editor**: Edit page title; add and edit **content blocks** (text, heading, image, video embed, table, file download) and **interaction blocks** (multiple choice, true/false, reflection). Changes save on blur.
 - **File downloads**: attach .docx, .xlsx, .pptx, .pdf or .csv files that are bundled into the SCORM package. See [docs/file-downloads.md](./docs/file-downloads.md).
 

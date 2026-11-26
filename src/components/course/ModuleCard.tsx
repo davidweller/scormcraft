@@ -73,8 +73,10 @@ export function ModuleCard({
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-gray-900">{mod.title}</h3>
             <p className="mt-1 text-sm text-gray-500">
-              {stats.lessonCount} lessons · {stats.pageCount} pages · {stats.interactionCount} quiz
-              {stats.interactionCount !== 1 ? "zes" : ""} · {stats.completionPercent}% complete
+              {stats.lessonCount} {stats.lessonCount === 1 ? "lesson" : "lessons"} · {stats.pageCount}{" "}
+              {stats.pageCount === 1 ? "page" : "pages"} · {stats.interactionCount}{" "}
+              {stats.interactionCount === 1 ? "interaction" : "interactions"} · {stats.completionPercent}%
+              complete
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
