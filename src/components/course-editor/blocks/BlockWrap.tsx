@@ -1,8 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Menu } from "@headlessui/react";
+import {
+  ArrowDownIcon,
+  ArrowPathIcon,
+  ArrowUpIcon,
+  ArrowUpOnSquareIcon,
+  EllipsisVerticalIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
+import { BLOCK_TYPE_LABELS } from "@/types/course";
+import type { BlockType } from "@/types/course";
 import { DragHandle } from "./DragHandle";
 
 interface BlockWrapProps {
@@ -18,6 +28,54 @@ interface BlockWrapProps {
   dragListeners?: SyntheticListenerMap;
   isDragging?: boolean;
   style?: React.CSSProperties;
+  onMove?: (to: "up" | "down" | "top") => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  flash?: boolean;
+}
+
+export function blockTypeLabel(type: string): string {
+  return (
+    BLOCK_TYPE_LABELS[type as BlockType] ??
+    type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
+
+// Hidden until the block is hovered or holds keyboard focus. Always shown on
+// touch screens, which have no hover.
+const REVEAL =
+  "opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 [@media(hover:none)]:opacity-100";
+
+function MenuItem({
+  icon,
+  label,
+  onClick,
+  disabled,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <Menu.Item disabled={disabled}>
+      {({ active }) => (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm disabled:opacity-40 ${
+            danger ? "text-red-600" : "text-gray-700"
+          } ${active ? (danger ? "bg-red-50" : "bg-gray-100") : ""}`}
+        >
+          <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
+          {label}
+        </button>
+      )}
+    </Menu.Item>
+  );
 }
 
 export function BlockWrap({
@@ -32,121 +90,84 @@ export function BlockWrap({
   dragListeners,
   isDragging,
   style,
+  onMove,
+  canMoveUp,
+  canMoveDown,
+  flash,
 }: BlockWrapProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    if (menuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [menuOpen]);
-
-  const typeLabel = formatBlockType(blockType);
+  const typeLabel = blockTypeLabel(blockType);
   const bgClass =
-    variant === "interaction"
-      ? "border-amber-100 bg-amber-50/50"
-      : "border-gray-200 bg-surface";
+    variant === "interaction" ? "border-amber-200 bg-amber-50/50" : "border-gray-200 bg-surface";
 
   return (
     <div
-      className={`group relative rounded border p-3 transition-shadow ${bgClass} ${isDragging ? "shadow-lg ring-2 ring-brand-400" : ""} ${regenerating ? "opacity-60" : ""}`}
+      className={`group relative rounded-lg border p-3 transition-[box-shadow,opacity] duration-300 ${bgClass} ${
+        isDragging ? "opacity-40" : ""
+      } ${flash ? "ring-2 ring-brand-400" : ""} ${regenerating ? "opacity-60" : ""}`}
       style={style}
     >
-      {/* Left side: drag handle */}
-      <div className="absolute -left-1 top-1/2 -translate-x-full -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
-        {dragAttributes && dragListeners && (
-          <DragHandle attributes={dragAttributes} listeners={dragListeners} />
-        )}
-      </div>
+      {dragAttributes && dragListeners && (
+        <div className={`absolute -left-1 top-2 -translate-x-full ${REVEAL}`}>
+          <DragHandle
+            attributes={dragAttributes}
+            listeners={dragListeners}
+            label={`Reorder ${typeLabel} block`}
+          />
+        </div>
+      )}
 
-      {/* Top right: type label + actions */}
       <div className="absolute right-2 top-2 flex items-center gap-2">
         <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
           {typeLabel}
         </span>
         {saving && <span className="text-xs text-gray-400">Saving…</span>}
-        {regenerating && <span className="text-xs text-brand-500">Regenerating…</span>}
+        {regenerating && <span className="text-xs text-brand-600">Writing…</span>}
 
-        {/* Actions menu */}
-        <div className="relative opacity-0 transition-opacity group-hover:opacity-100" ref={menuRef}>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(!menuOpen)}
+        <Menu as="div" className={`relative ${REVEAL} data-[open]:opacity-100`}>
+          <Menu.Button
             className="flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Block actions"
+            aria-label={`${typeLabel} block actions`}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <circle cx="8" cy="3" r="1.5" />
-              <circle cx="8" cy="8" r="1.5" />
-              <circle cx="8" cy="13" r="1.5" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-full z-10 mt-1 min-w-[140px] rounded-md border border-gray-200 bg-surface py-1 shadow-lg">
-              {onRegenerate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onRegenerate();
-                  }}
-                  disabled={regenerating}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                >
-                  <RefreshIcon />
-                  Regenerate
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  onDelete();
-                }}
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-red-600 hover:bg-red-50"
-              >
-                <TrashIcon />
-                Delete
-              </button>
-            </div>
-          )}
-        </div>
+            <EllipsisVerticalIcon className="h-5 w-5" />
+          </Menu.Button>
+          <Menu.Items className="absolute right-0 top-full z-20 mt-1 w-48 rounded-md border border-gray-200 bg-surface py-1 shadow-lg focus:outline-none">
+            {onMove && (
+              <>
+                <MenuItem
+                  icon={<ArrowUpIcon />}
+                  label="Move up"
+                  disabled={!canMoveUp}
+                  onClick={() => onMove("up")}
+                />
+                <MenuItem
+                  icon={<ArrowDownIcon />}
+                  label="Move down"
+                  disabled={!canMoveDown}
+                  onClick={() => onMove("down")}
+                />
+                <MenuItem
+                  icon={<ArrowUpOnSquareIcon />}
+                  label="Move to top"
+                  disabled={!canMoveUp}
+                  onClick={() => onMove("top")}
+                />
+                <div className="my-1 border-t border-gray-100" />
+              </>
+            )}
+            {onRegenerate && (
+              <MenuItem
+                icon={<ArrowPathIcon />}
+                label="Rewrite with AI…"
+                disabled={regenerating}
+                onClick={onRegenerate}
+              />
+            )}
+            <MenuItem icon={<TrashIcon />} label="Delete" danger onClick={onDelete} />
+          </Menu.Items>
+        </Menu>
       </div>
 
-      {/* Block content */}
       <div className="pr-20">{children}</div>
     </div>
-  );
-}
-
-function formatBlockType(type: string): string {
-  return type
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function RefreshIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M23 4v6h-6" />
-      <path d="M1 20v-6h6" />
-      <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-    </svg>
   );
 }

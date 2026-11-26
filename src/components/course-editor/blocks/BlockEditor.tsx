@@ -26,6 +26,12 @@ export interface BlockEditorProps {
   dragListeners?: SyntheticListenerMap;
   isDragging?: boolean;
   style?: React.CSSProperties;
+  /** Moves the block within the page. Omit to hide the move actions. */
+  onMove?: (to: "up" | "down" | "top") => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
+  /** Briefly highlights the block, after it has been moved or inserted. */
+  flash?: boolean;
 }
 
 export function BlockEditor({
@@ -42,6 +48,10 @@ export function BlockEditor({
   dragListeners,
   isDragging,
   style,
+  onMove,
+  canMoveUp,
+  canMoveDown,
+  flash,
 }: BlockEditorProps) {
   const [saving, setSaving] = useState(false);
 
@@ -67,6 +77,10 @@ export function BlockEditor({
     dragListeners,
     isDragging,
     style,
+    onMove,
+    canMoveUp,
+    canMoveDown,
+    flash,
   };
 
   // Content block types

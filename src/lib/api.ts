@@ -163,15 +163,21 @@ export async function reorderBlocks(
   );
 }
 
+/**
+ * Asks the AI for a new version of a block. With `preview`, nothing is saved:
+ * the returned block carries the proposed data for the author to accept.
+ */
 export async function regenerateBlock(
   courseId: string,
   pageId: string,
-  blockId: string
+  blockId: string,
+  options: { preview?: boolean } = {}
 ) {
   return json<{ success: boolean; block: BlockApiResponse }>(
     await fetch(`${base}/api/courses/${courseId}/pages/${pageId}/blocks/${blockId}/regenerate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ preview: options.preview === true }),
     })
   );
 }

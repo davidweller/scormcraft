@@ -8,10 +8,13 @@ const REGENERABLE_CONTENT_TYPES = ["text", "heading", "key_insight", "key_point"
 const REGENERABLE_INTERACTION_TYPES = ["multiple_choice", "true_false", "reflection", "drag_and_drop", "matching", "dialog_cards"];
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ courseId: string; pageId: string; blockId: string }> }
 ) {
   const { courseId, pageId, blockId } = await params;
+  // With preview, the new version is returned but not saved, so the author
+  // can compare it with what they have before anything is replaced.
+  const { preview } = (await request.json().catch(() => ({}))) as { preview?: boolean };
 
   try {
     const course = await prisma.course.findUnique({
@@ -108,6 +111,12 @@ export async function POST(
         includeExplanation: true,
       });
       updatedData = result.config as Prisma.InputJsonValue;
+    }
+
+    if (preview === true) {
+      const { page: _page, ...current } = block;
+      void _page;
+      return NextResponse.json({ success: true, block: { ...current, data: updatedData } });
     }
 
     const updated = await prisma.block.update({
