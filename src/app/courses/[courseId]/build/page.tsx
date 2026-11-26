@@ -12,7 +12,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/20/solid";
 import type { CourseApiResponse } from "@/lib/api";
-import { fetchCourse } from "@/lib/api";
+import { COURSE_CHANGED_EVENT, fetchCourse } from "@/lib/api";
 import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 import {
   Button,
@@ -119,6 +119,10 @@ function IconButton({
  * time. Nothing is written into a lesson before the outline is approved, and
  * lessons that already have content are never overwritten here.
  */
+function plural(n: number, word: string) {
+  return `${n} ${word}${n === 1 ? "" : "s"}`;
+}
+
 export default function BuildPage() {
   const params = useParams();
   const courseId = params.courseId as string;
@@ -286,6 +290,7 @@ export default function BuildPage() {
         })),
       });
       await load();
+      window.dispatchEvent(new Event(COURSE_CHANGED_EVENT));
       setStep("options");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't save the outline");
@@ -344,6 +349,7 @@ export default function BuildPage() {
     setBuilding(false);
     setFinished(true);
     void load();
+    window.dispatchEvent(new Event(COURSE_CHANGED_EVENT));
   }
 
   if (loadError) {
@@ -547,7 +553,7 @@ export default function BuildPage() {
                     Approve outline
                   </Button>
                   <span className="text-sm text-gray-500">
-                    {modules.filter((m) => m.title.trim()).length} modules, {lessonCount} lessons
+                    {plural(modules.filter((m) => m.title.trim()).length, "module")}, {plural(lessonCount, "lesson")}
                   </span>
                 </div>
               </>

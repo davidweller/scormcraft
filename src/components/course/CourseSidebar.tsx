@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { CourseApiResponse } from "@/lib/api";
+import { COURSE_CHANGED_EVENT, type CourseApiResponse } from "@/lib/api";
 import { getFlowCompletionV2 } from "@/lib/course-tree";
 import { SidebarSection, BuildStageItem, CourseSwitcher } from "./sidebar";
 import {
@@ -56,6 +56,15 @@ export function CourseShell({ courseId, children }: { courseId: string; children
   const inEditor = currentSegment === "edit";
   const rail = railChoice ?? inEditor;
 
+  // A page that changes the course without navigating (the AI build) fires
+  // this event so the stage ticks catch up.
+  const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    const bump = () => setRefresh((n) => n + 1);
+    window.addEventListener(COURSE_CHANGED_EVENT, bump);
+    return () => window.removeEventListener(COURSE_CHANGED_EVENT, bump);
+  }, []);
+
   // Refetched on navigation so the stage ticks reflect what was just done.
   useEffect(() => {
     let cancelled = false;
@@ -68,7 +77,7 @@ export function CourseShell({ courseId, children }: { courseId: string; children
     return () => {
       cancelled = true;
     };
-  }, [courseId, pathname]);
+  }, [courseId, pathname, refresh]);
 
   useEffect(() => {
     setDrawerOpen(false);

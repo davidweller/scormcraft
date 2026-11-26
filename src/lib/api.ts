@@ -264,3 +264,6 @@ export async function duplicateModule(courseId: string, moduleId: string) {
     await fetch(`${base}/api/courses/${courseId}/modules/${moduleId}/duplicate`, { method: "POST" })
   );
 }
+
+/** Fired on `window` when a page changes the course without navigating, so the sidebar can reload it. */
+export const COURSE_CHANGED_EVENT = "scormcraft:course-changed";
