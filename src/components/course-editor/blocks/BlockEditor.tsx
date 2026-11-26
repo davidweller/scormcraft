@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
+import { ArrowDownIcon, ArrowUpIcon } from "@heroicons/react/20/solid";
 import type { DraggableAttributes } from "@dnd-kit/core";
 import type { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 import type { BlockApiResponse } from "@/lib/api";
@@ -666,6 +667,56 @@ function TableBlockEditor({
 
 // Interaction block sub-editors
 
+/** A copy of `list` with the item at `from` swapped into `to`. */
+function swapped<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  [next[from], next[to]] = [next[to], next[from]];
+  return next;
+}
+
+/** Up and down arrows for one row of a list inside an interaction. */
+function MoveButtons({
+  index,
+  count,
+  label,
+  onMove,
+  className = "",
+}: {
+  index: number;
+  count: number;
+  /** What a row is called, e.g. "option". */
+  label: string;
+  onMove: (from: number, to: number) => void;
+  className?: string;
+}) {
+  const button =
+    "flex h-6 w-6 items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-30 disabled:hover:bg-transparent";
+  return (
+    <span className={`flex shrink-0 items-center ${className}`}>
+      <button
+        type="button"
+        className={button}
+        disabled={index === 0}
+        onClick={() => onMove(index, index - 1)}
+        aria-label={`Move ${label} ${index + 1} up`}
+        title="Move up"
+      >
+        <ArrowUpIcon className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={button}
+        disabled={index === count - 1}
+        onClick={() => onMove(index, index + 1)}
+        aria-label={`Move ${label} ${index + 1} down`}
+        title="Move down"
+      >
+        <ArrowDownIcon className="h-4 w-4" />
+      </button>
+    </span>
+  );
+}
+
 function MultipleChoiceEditor({
   data,
   onSave,
@@ -677,6 +728,8 @@ function MultipleChoiceEditor({
   const [options, setOptions] = useState<string[]>(Array.isArray(data.options) && data.options.length > 0 ? data.options : ["", ""]);
   const [correctIndex, setCorrectIndex] = useState(Math.max(0, data.correctIndex ?? 0));
   const [explanation, setExplanation] = useState(data.explanation ?? "");
+  // Each question needs its own radio group, or two on a page share one answer.
+  const groupName = useId();
 
   const save = () => {
     const opts = options.filter((o) => o.trim() !== "");
@@ -712,7 +765,7 @@ function MultipleChoiceEditor({
         <div key={i} className="flex items-center gap-2">
           <input
             type="radio"
-            name="correct"
+            name={groupName}
             checked={correctIndex === i}
             onChange={() => {
               setCorrectIndex(i);
@@ -732,6 +785,20 @@ function MultipleChoiceEditor({
             onKeyDown={handleKeyDown}
             className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder={`Option ${i + 1}`}
+          />
+          <MoveButtons
+            index={i}
+            count={options.length}
+            label="option"
+            onMove={(from, to) => {
+              const next = swapped(options, from, to);
+              // The correct answer moves with its option.
+              const nextCorrect =
+                correctIndex === from ? to : correctIndex === to ? from : correctIndex;
+              setOptions(next);
+              setCorrectIndex(nextCorrect);
+              onSave({ question, options: next, correctIndex: nextCorrect, explanation });
+            }}
           />
           {options.length > 2 && (
             <button
@@ -942,6 +1009,17 @@ function DragAndDropEditor({
             className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder={`Item ${i + 1}`}
           />
+          <MoveButtons
+            index={i}
+            count={items.length}
+            label="item"
+            onMove={(from, to) => {
+              const next = swapped(items, from, to);
+              setItems(next);
+              const kept = next.filter((x) => x.trim());
+              onSave({ question, items: kept, correctOrder: kept.map((_, idx) => idx), explanation });
+            }}
+          />
           {items.length > 2 && (
             <button
               type="button"
@@ -1054,6 +1132,16 @@ function MatchingEditor({
             className="flex-1 rounded border border-gray-200 px-2 py-1 text-sm transition-colors focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             placeholder="Right item"
           />
+          <MoveButtons
+            index={i}
+            count={pairs.length}
+            label="pair"
+            onMove={(from, to) => {
+              const next = swapped(pairs, from, to);
+              setPairs(next);
+              onSave({ question, pairs: next.filter((p) => p.left.trim() || p.right.trim()), explanation });
+            }}
+          />
           {pairs.length > 2 && (
             <button
               type="button"
@@ -1136,8 +1224,19 @@ function DialogCardsEditor({
       <label className="block text-xs font-medium text-gray-500">Cards (non-graded flip cards)</label>
       {cards.map((card, i) => (
         <div key={i} className="rounded border border-gray-200 bg-gray-50 p-2 space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-gray-500">Card {i + 1}</span>
+            <MoveButtons
+              className="ml-auto"
+              index={i}
+              count={cards.length}
+              label="card"
+              onMove={(from, to) => {
+                const next = swapped(cards, from, to);
+                setCards(next);
+                onSave({ title, cards: next.filter((c) => c.front.trim() || c.back.trim()) });
+              }}
+            />
             {cards.length > 1 && (
               <button
                 type="button"
