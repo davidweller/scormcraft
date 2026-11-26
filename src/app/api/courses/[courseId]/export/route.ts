@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 import { getCourseForExport } from "@/lib/course-export";
 import { buildScorm12Zip } from "@/lib/scorm/build-package";
 import { buildCourseDocx } from "@/lib/docx-export";
@@ -57,6 +58,9 @@ export async function POST(
       includeSidecar: includeSidecar !== false,
     });
     const filename = `scorm-${safeTitle}.zip`;
+
+    // Lets the sidebar's Export stage show "Exported".
+    await prisma.course.update({ where: { id: courseId }, data: { lastExportedAt: new Date() } });
 
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,

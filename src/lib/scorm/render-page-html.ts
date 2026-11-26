@@ -367,7 +367,41 @@ function buildBrandCss(brandConfig?: BrandConfig | null, logoPath?: string): str
   if (c.primaryButtonHover) css += ".page-nav a[href]:not(.secondary):hover { background: var(--brand-primary-hover); color: var(--brand-primary-text); }\n";
   if (c.secondaryButtonColor) css += ".page-nav a.secondary { background: var(--brand-secondary-bg); color: var(--brand-secondary-color); border: 2px solid var(--brand-secondary-color); }\n";
   if (c.secondaryButtonColor) css += ".page-nav a.secondary:hover { filter: brightness(0.96); }\n";
+  css += buildThemeCss(c.theme);
   return css;
+}
+
+/**
+ * Layout rules for the chosen theme. They follow the brand rules, so they
+ * can restyle the same elements. "classic" adds nothing: it is the base CSS.
+ */
+export function buildThemeCss(theme: unknown): string {
+  if (theme === "card") {
+    return [
+      "body { background: var(--brand-content-bg, #f7f8fa); }",
+      ".course-wrapper { max-width: 840px; }",
+      ".course-main { background: var(--brand-card-bg, #ffffff); border-top: 0; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.07); padding: 3rem 2.5rem; }",
+      ".section-number { display: none; }",
+      ".interaction, .content-card { box-shadow: none; border: 1px solid rgba(0,0,0,0.1); }",
+      ".progress-bar { height: 8px; border-radius: 4px; }",
+      "@media (max-width: 600px) { .course-main { padding: 2rem 1.25rem; } }",
+      "",
+    ].join("\n");
+  }
+  if (theme === "banner") {
+    return [
+      "body { background-image: linear-gradient(var(--brand-primary, #015887), var(--brand-primary, #015887)); background-size: 100% 230px; background-repeat: no-repeat; }",
+      ".course-wrapper { max-width: 860px; padding-top: 1.5rem; }",
+      ".course-header { margin-bottom: 1.25rem; }",
+      ".progress-label { color: rgba(255,255,255,0.9); }",
+      ".progress-bar { background: rgba(255,255,255,0.3); }",
+      ".course-main { background: var(--brand-card-bg, #ffffff); border-top: 0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); margin-top: 1.5rem; }",
+      ".section-number { display: none; }",
+      ".interaction, .content-card { background: var(--brand-content-bg, #f7f8fa); box-shadow: none; }",
+      "",
+    ].join("\n");
+  }
+  return "";
 }
 
 function buildFontLinks(brandConfig?: BrandConfig | null): string {

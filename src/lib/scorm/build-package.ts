@@ -1,3 +1,4 @@
+import { detectImageType } from "@/lib/image-type";
 import JSZip from "jszip";
 import { buildManifest12, type PageEntry } from "./manifest";
 import { SCORM_API_JS } from "./scorm-api-js";
@@ -407,6 +408,7 @@ export async function buildScorm12Zip(
   const brandConfig = course.brandConfig ?? undefined;
   let logoPath: string | undefined;
   let logoSize = 0;
+  let logoMimeType = "image/png";
   const logoUrl =
     brandConfig?.logoUrl && typeof brandConfig.logoUrl === "string" ? brandConfig.logoUrl : null;
   if (logoUrl) {
@@ -414,7 +416,10 @@ export async function buildScorm12Zip(
       const res = await fetchStored(logoUrl, { signal: AbortSignal.timeout(10000) });
       if (res.ok) {
         const buf = Buffer.from(await res.arrayBuffer());
-        const ext = logoUrl.includes(".png") ? "png" : logoUrl.includes(".svg") ? "svg" : "png";
+        // From the bytes, not the URL: a JPEG or WebP logo used to be written
+        // out as logo.png, which some LMSs then refuse to show.
+        const { ext, mimeType } = detectImageType(buf, logoUrl);
+        logoMimeType = mimeType;
         contentFolder.file(`logo.${ext}`, buf);
         logoPath = `logo.${ext}`;
         logoSize = buf.length;
@@ -491,7 +496,7 @@ export async function buildScorm12Zip(
       zipPath: `content/${logoPath}`,
       kind: "logo",
       filename: logoPath,
-      mimeType: logoPath.endsWith(".svg") ? "image/svg+xml" : "image/png",
+      mimeType: logoMimeType,
       size: logoSize,
     });
   }

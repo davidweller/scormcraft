@@ -166,7 +166,7 @@ export function getCourseIssues(course: CourseApiResponse): CourseIssue[] {
             pageId: page.id,
             lessonId: lesson.id,
             moduleId: mod.id,
-            path: `/courses/${course.id}/edit/${mod.id}/${lesson.id}/${page.id}`,
+            path: `/courses/${course.id}/edit/page/${page.id}`,
           });
         }
       }
@@ -177,7 +177,7 @@ export function getCourseIssues(course: CourseApiResponse): CourseIssue[] {
           message: `Lesson "${lesson.title}" has no pages`,
           lessonId: lesson.id,
           moduleId: mod.id,
-          path: `/courses/${course.id}/edit/${mod.id}/${lesson.id}`,
+          path: `/courses/${course.id}/edit`,
         });
       }
     }
@@ -187,7 +187,7 @@ export function getCourseIssues(course: CourseApiResponse): CourseIssue[] {
         severity: "warning",
         message: `Module "${mod.title}" has no lessons`,
         moduleId: mod.id,
-        path: `/courses/${course.id}/blueprint`,
+        path: `/courses/${course.id}/edit`,
       });
     }
   }

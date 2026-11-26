@@ -326,13 +326,12 @@ export default function ImportScormModal({
                       </div>
 
                       <div className="rounded-md bg-gray-50 p-3 text-xs text-gray-600">
-                        <p className="font-medium text-gray-700">What imports well</p>
+                        <p className="font-medium text-gray-700">What can be imported</p>
                         <p className="mt-1">
-                          Packages exported from this app come back exactly as they left, including
-                          answer keys. Other SCORM packages built from plain HTML import as editable
-                          content, with a report of anything that could not be converted. Articulate
-                          Storyline, Rise and Adobe Captivate packages are not supported: their
-                          content is compiled into JavaScript rather than stored as pages.
+                          Packages exported from SCORMcraft come back exactly as they left, including
+                          answer keys. Packages made in other tools, such as Articulate Storyline,
+                          Rise or Adobe Captivate, can&apos;t be imported yet. To bring in content
+                          from elsewhere, use &quot;Import course&quot; with a Word or Markdown file.
                         </p>
                       </div>
                     </div>

@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useConfirm } from "@/components/ui";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 
 interface CourseSettings {
   aiProvider?: string;
@@ -40,6 +41,23 @@ export default function SettingsPage() {
   const [providers, setProviders] = useState<{ id: string; label: string }[]>([]);
   const [deleting, setDeleting] = useState(false);
 
+  // What the form looked like when last loaded or saved, to spot unsaved edits.
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const signature = JSON.stringify([
+    title,
+    overview,
+    audience,
+    targetWordCount,
+    tone,
+    complianceLevel,
+    ilos,
+    aiProvider,
+    newApiKey,
+    newGeminiKey,
+    newAnthropicKey,
+  ]);
+  useUnsavedChanges(savedSignature !== null && signature !== savedSignature && !deleting);
+
   const loadCourse = useCallback(async () => {
     setError(null);
     try {
@@ -61,6 +79,21 @@ export default function SettingsPage() {
       setHasGeminiKey(Boolean(settings?.apiKeys?.gemini));
       setHasAnthropicKey(Boolean(settings?.apiKeys?.anthropic));
       setAiProvider(settings?.aiProvider ?? "");
+      setSavedSignature(
+        JSON.stringify([
+          data.title ?? "",
+          data.overview ?? "",
+          data.audience ?? "",
+          typeof data.targetWordCount === "number" ? data.targetWordCount : "",
+          data.tone ?? "",
+          data.complianceLevel ?? "",
+          Array.isArray(data.ilos) ? data.ilos : [],
+          settings?.aiProvider ?? "",
+          "",
+          "",
+          "",
+        ])
+      );
       const appSettings = await fetch("/api/settings").then((r) => (r.ok ? r.json() : null)).catch(() => null);
       if (appSettings?.providers) setProviders(appSettings.providers);
     } catch (e) {
@@ -112,6 +145,9 @@ export default function SettingsPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Save failed");
       }
+      setSavedSignature(
+        JSON.stringify([title, overview, audience, targetWordCount, tone, complianceLevel, ilos, aiProvider, "", "", ""])
+      );
       if (newApiKey.trim()) {
         setHasApiKey(true);
         setNewApiKey("");

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useConfirm } from "@/components/ui";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
 
 interface BlueprintLesson {
   /** Set for lessons that already exist, so saving keeps their content. */
@@ -44,6 +45,11 @@ export default function BlueprintPage() {
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const confirm = useConfirm();
 
+  // What the form looked like when last loaded or saved, to spot unsaved edits.
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const signature = JSON.stringify([description, targetWordCount, modules, ilos, assessmentPlan]);
+  useUnsavedChanges(savedSignature !== null && signature !== savedSignature);
+
   const loadCourse = useCallback(async () => {
     setError(null);
     try {
@@ -65,6 +71,7 @@ export default function BlueprintPage() {
       );
       setIlos(Array.isArray(data.ilos) ? data.ilos : []);
       setAssessmentPlan(typeof data.assessmentPlan === "string" ? data.assessmentPlan : "");
+      setSavedSignature(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -75,6 +82,11 @@ export default function BlueprintPage() {
   useEffect(() => {
     loadCourse();
   }, [loadCourse]);
+
+  // After a load, the form as it now stands is the saved state.
+  useEffect(() => {
+    if (!loading && savedSignature === null) setSavedSignature(signature);
+  }, [loading, savedSignature, signature]);
 
   async function handleRegenerate(section: string) {
     setRegenerating(section);

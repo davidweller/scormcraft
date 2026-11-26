@@ -1,4 +1,31 @@
+/** The layouts a learner-facing course can use. */
+export const COURSE_THEMES = [
+  {
+    id: "classic",
+    name: "Classic",
+    description: "A tinted reading column under an accent line.",
+  },
+  {
+    id: "card",
+    name: "Card",
+    description: "The page sits on a raised white card over a tinted background.",
+  },
+  {
+    id: "banner",
+    name: "Banner",
+    description: "A band of your primary colour runs across the top, with the page overlapping it.",
+  },
+] as const;
+
+export type CourseThemeId = (typeof COURSE_THEMES)[number]["id"];
+
+export function isCourseThemeId(value: unknown): value is CourseThemeId {
+  return COURSE_THEMES.some((t) => t.id === value);
+}
+
 export interface BrandConfig {
+  /** Page layout for the exported course. Defaults to "classic". */
+  theme?: CourseThemeId;
   /** Primary brand / primary button fill / links */
   primary?: string;
   /** Secondary colour (outline, secondary text) */

@@ -2,16 +2,38 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { CheckCircleIcon, ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { fetchCourse } from "@/lib/api";
+import { getCourseIssues, type CourseIssue } from "@/lib/course-tree";
+import { Button, ButtonLink, ErrorNote, Field, Select, Skeleton, useToast } from "@/components/ui";
 
 export default function ExportPage() {
   const params = useParams();
   const courseId = params.courseId as string;
+  const toast = useToast();
   const [format, setFormat] = useState<"scorm" | "docx">("scorm");
-  const [version, setVersion] = useState<"1.2" | "2004">("1.2");
   const [includeAnswers, setIncludeAnswers] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [issues, setIssues] = useState<CourseIssue[] | null>(null);
+  const [lastExportedAt, setLastExportedAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchCourse(courseId)
+      .then((course) => {
+        if (cancelled) return;
+        setIssues(getCourseIssues(course));
+        setLastExportedAt((course as { lastExportedAt?: string | null }).lastExportedAt ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setIssues([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
 
   async function handleExport() {
     setLoading(true);
@@ -23,7 +45,7 @@ export default function ExportPage() {
         body: JSON.stringify({
           format,
           includeAnswers,
-          version,
+          version: "1.2",
           completionRules: {},
           scoring: {},
           lmsSettings: {},
@@ -43,6 +65,8 @@ export default function ExportPage() {
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
+      if (format === "scorm") setLastExportedAt(new Date().toISOString());
+      toast(`Downloaded ${filename}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {
@@ -50,18 +74,62 @@ export default function ExportPage() {
     }
   }
 
+  const errors = (issues ?? []).filter((i) => i.severity === "error");
+  const warnings = (issues ?? []).filter((i) => i.severity === "warning");
+
   return (
     <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mx-auto max-w-xl">
-        <div>
-          <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>
-          <h1 className="mt-2 text-2xl font-bold">Export course</h1>
-          <p className="mt-1 text-sm text-gray-500">Choose a format and download your course.</p>
-        </div>
+        <h1 className="text-2xl font-bold">Export course</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Choose a format and download your course.
+          {lastExportedAt &&
+            ` Last exported as SCORM on ${new Date(lastExportedAt).toLocaleDateString()}.`}
+        </p>
 
-        {error && (
-          <p className="mt-4 rounded bg-red-50 p-2 text-sm text-red-700">{error}</p>
-        )}
+        <section className="mt-6" aria-label="Readiness">
+          {issues === null ? (
+            <Skeleton className="h-14 w-full" />
+          ) : issues.length === 0 ? (
+            <p className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+              <CheckCircleIcon className="h-5 w-5 shrink-0" />
+              No problems found. The course is ready to export.
+            </p>
+          ) : (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+              <p className="flex items-center gap-2 font-medium">
+                <ExclamationTriangleIcon className="h-5 w-5 shrink-0" />
+                {errors.length > 0
+                  ? `${errors.length} thing${errors.length === 1 ? "" : "s"} to fix before learners see this`
+                  : `${warnings.length} thing${warnings.length === 1 ? "" : "s"} to check`}
+              </p>
+              <ul className="mt-2 space-y-1 pl-7">
+                {[...errors, ...warnings].slice(0, 8).map((issue, i) => (
+                  <li key={i}>
+                    {issue.message}
+                    {issue.path && (
+                      <>
+                        {" "}
+                        <Link href={issue.path} className="font-medium underline">
+                          Fix
+                        </Link>
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 pl-7 text-xs">
+                {issues.length > 8 && `${issues.length - 8} more. `}
+                You can still export.{" "}
+                <Link href={`/courses/${courseId}/review`} className="underline">
+                  See the full review
+                </Link>
+              </p>
+            </div>
+          )}
+        </section>
+
+        {error && <ErrorNote className="mt-4">{error}</ErrorNote>}
 
         <div className="mt-8 space-y-6">
           <fieldset>
@@ -92,7 +160,9 @@ export default function ExportPage() {
                 />
                 <span>
                   <span className="font-medium">Word document (.docx)</span>
-                  <span className="block text-gray-500">For review, editing or print. Interactions become written questions.</span>
+                  <span className="block text-gray-500">
+                    For review, editing or print. Interactions become written questions.
+                  </span>
                 </span>
               </label>
             </div>
@@ -108,40 +178,31 @@ export default function ExportPage() {
               Include answers and explanations
             </label>
           ) : (
-          <>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">SCORM version</label>
-            <select
-              value={version}
-              onChange={(e) => setVersion(e.target.value as "1.2" | "2004")}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
-            >
-              <option value="1.2">SCORM 1.2</option>
-              <option value="2004">SCORM 2004 (3rd ed) — coming soon</option>
-            </select>
-          </div>
-          <p className="text-sm text-gray-500">
-            Completion and scoring use default behaviour (complete/incomplete per SCO). LMS settings can be configured in your LMS when importing.
-          </p>
-          </>
+            <>
+              <Field
+                label="SCORM version"
+                hint="Completion is recorded per page as complete or incomplete. Other LMS settings are set in your LMS when you upload the package."
+              >
+                {(id) => (
+                  <Select id={id} value="1.2" onChange={() => {}}>
+                    <option value="1.2">SCORM 1.2</option>
+                    <option value="2004" disabled>
+                      SCORM 2004 (not available yet)
+                    </option>
+                  </Select>
+                )}
+              </Field>
+            </>
           )}
         </div>
 
         <div className="mt-10 flex gap-2">
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={loading}
-            className="rounded bg-brand-600 px-4 py-2 text-white hover:bg-brand-700 disabled:opacity-50"
-          >
+          <Button onClick={handleExport} loading={loading}>
             {loading ? "Preparing…" : format === "docx" ? "Download DOCX" : "Download ZIP"}
-          </button>
-          <Link
-            href={`/courses/${courseId}`}
-            className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-          >
+          </Button>
+          <ButtonLink href={`/courses/${courseId}`} variant="secondary">
             Back to course
-          </Link>
+          </ButtonLink>
         </div>
       </div>
     </main>

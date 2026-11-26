@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState, useRef } from "react";
-import type { BrandConfig } from "@/types/branding";
-import { DEFAULT_BRAND_CONFIG } from "@/types/branding";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { BrandConfig, CourseThemeId } from "@/types/branding";
+import { COURSE_THEMES, DEFAULT_BRAND_CONFIG, isCourseThemeId } from "@/types/branding";
+import { useUnsavedChanges } from "@/lib/use-unsaved-changes";
+import { Button, ButtonLink, ErrorNote, PageSkeleton, Select, useToast } from "@/components/ui";
 
 const POPULAR_FONTS = [
   "Ubuntu",
@@ -28,26 +29,90 @@ function darkenHex(hex: string, amount = 0.15): string {
   return `#${Math.round(r).toString(16).padStart(2, "0")}${Math.round(g).toString(16).padStart(2, "0")}${Math.round(b).toString(16).padStart(2, "0")}`;
 }
 
+interface Form {
+  theme: CourseThemeId;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  contentBg: string;
+  headingFont: string;
+  bodyFont: string;
+  logoUrl: string | null;
+}
+
+function formFrom(brand: BrandConfig): Form {
+  const d = DEFAULT_BRAND_CONFIG;
+  return {
+    theme: isCourseThemeId(brand.theme) ? brand.theme : "classic",
+    primary: brand.primary ?? d.primary ?? "",
+    secondary: brand.secondary ?? d.secondary ?? "",
+    accent: brand.accent ?? d.accent ?? "",
+    background: brand.background ?? d.background ?? "",
+    contentBg: brand.contentBg ?? d.contentBg ?? "",
+    headingFont: brand.headingFont ?? d.headingFont ?? "",
+    bodyFont: brand.bodyFont ?? brand.font ?? d.bodyFont ?? "",
+    logoUrl: brand.logoUrl ?? null,
+  };
+}
+
+const COLOURS: { key: keyof Form; label: string }[] = [
+  { key: "primary", label: "Primary" },
+  { key: "secondary", label: "Secondary" },
+  { key: "accent", label: "Accent" },
+  { key: "background", label: "Page background" },
+  { key: "contentBg", label: "Content background" },
+];
+
+/** A small picture of a theme's layout, drawn in the chosen colours. */
+function ThemeThumb({ theme, form }: { theme: CourseThemeId; form: Form }) {
+  const page = theme === "card" ? form.contentBg : form.background;
+  const main = theme === "classic" ? form.contentBg : "#ffffff";
+  return (
+    <div
+      className="relative h-20 w-full overflow-hidden rounded border border-gray-200"
+      style={{ backgroundColor: page }}
+      aria-hidden="true"
+    >
+      {theme === "banner" && (
+        <div className="absolute inset-x-0 top-0 h-9" style={{ backgroundColor: form.primary }} />
+      )}
+      <div
+        className="absolute inset-x-4 bottom-0 top-4 rounded-t p-2"
+        style={{
+          backgroundColor: main,
+          borderTop: theme === "classic" ? `3px solid ${form.accent}` : undefined,
+          boxShadow: theme === "classic" ? undefined : "0 2px 8px rgba(0,0,0,0.15)",
+        }}
+      >
+        <div className="h-1.5 w-1/2 rounded" style={{ backgroundColor: form.primary }} />
+        <div className="mt-1.5 h-1 w-full rounded bg-black/10" />
+        <div className="mt-1 h-1 w-5/6 rounded bg-black/10" />
+        <div className="mt-1 h-1 w-2/3 rounded bg-black/10" />
+      </div>
+    </div>
+  );
+}
+
 export default function BrandingPage() {
   const params = useParams();
   const courseId = params.courseId as string;
+  const toast = useToast();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const [primary, setPrimary] = useState(DEFAULT_BRAND_CONFIG.primary ?? "");
-  const [secondary, setSecondary] = useState(DEFAULT_BRAND_CONFIG.secondary ?? "");
-  const [accent, setAccent] = useState(DEFAULT_BRAND_CONFIG.accent ?? "");
-  const [background, setBackground] = useState(DEFAULT_BRAND_CONFIG.background ?? "");
-  const [contentBg, setContentBg] = useState(DEFAULT_BRAND_CONFIG.contentBg ?? "");
-  const [headingFont, setHeadingFont] = useState(DEFAULT_BRAND_CONFIG.headingFont ?? "");
-  const [bodyFont, setBodyFont] = useState(DEFAULT_BRAND_CONFIG.bodyFont ?? "");
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
-
+  const [form, setForm] = useState<Form>(() => formFrom({}));
+  const [saved, setSaved] = useState<Form>(() => formFrom({}));
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const dirty = useMemo(() => JSON.stringify(form) !== JSON.stringify(saved), [form, saved]);
+  useUnsavedChanges(dirty);
+
+  function set<K extends keyof Form>(key: K, value: Form[K]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
 
   const loadCourse = useCallback(async () => {
     setError(null);
@@ -58,15 +123,9 @@ export default function BrandingPage() {
         throw new Error("Failed to load course");
       }
       const data = await res.json();
-      const brand = (data.brandConfig as BrandConfig) ?? {};
-      setPrimary(brand.primary ?? DEFAULT_BRAND_CONFIG.primary ?? "");
-      setSecondary(brand.secondary ?? DEFAULT_BRAND_CONFIG.secondary ?? "");
-      setAccent(brand.accent ?? DEFAULT_BRAND_CONFIG.accent ?? "");
-      setBackground(brand.background ?? DEFAULT_BRAND_CONFIG.background ?? "");
-      setContentBg(brand.contentBg ?? DEFAULT_BRAND_CONFIG.contentBg ?? "");
-      setHeadingFont(brand.headingFont ?? DEFAULT_BRAND_CONFIG.headingFont ?? "");
-      setBodyFont(brand.bodyFont ?? brand.font ?? DEFAULT_BRAND_CONFIG.bodyFont ?? "");
-      setLogoUrl(brand.logoUrl ?? null);
+      const next = formFrom((data.brandConfig as BrandConfig) ?? {});
+      setForm(next);
+      setSaved(next);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
@@ -78,6 +137,14 @@ export default function BrandingPage() {
     loadCourse();
   }, [loadCourse]);
 
+  // Load the chosen fonts, so the preview shows them and not a fallback.
+  const fontHref = useMemo(() => {
+    const families = [...new Set([form.headingFont, form.bodyFont].filter(Boolean))]
+      .map((f) => `family=${f.trim().replace(/\s+/g, "+")}:wght@400;600;700`)
+      .join("&");
+    return families ? `https://fonts.googleapis.com/css2?${families}&display=swap` : null;
+  }, [form.headingFont, form.bodyFont]);
+
   async function handleUploadLogo(file: File) {
     setUploading(true);
     setError(null);
@@ -85,16 +152,13 @@ export default function BrandingPage() {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("prefix", "logos");
-      const res = await fetch("/api/uploads", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/uploads", { method: "POST", body: formData });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Upload failed");
       }
       const { url } = (await res.json()) as { url: string };
-      setLogoUrl(url);
+      set("logoUrl", url);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Upload failed");
     } finally {
@@ -102,40 +166,30 @@ export default function BrandingPage() {
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) handleUploadLogo(file);
-  }
-
-  function handleRemoveLogo() {
-    setLogoUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
   async function handleSave() {
     setSaving(true);
     setError(null);
-    setSuccess(false);
     try {
       const brandConfig: BrandConfig = {
-        primary,
-        primaryButtonFill: primary,
+        theme: form.theme,
+        primary: form.primary,
+        primaryButtonFill: form.primary,
         primaryButtonText: DEFAULT_BRAND_CONFIG.primaryButtonText,
-        primaryButtonHover: darkenHex(primary),
-        secondary,
-        secondaryButtonColor: secondary,
-        secondaryButtonBg: background,
-        accent,
-        ctaFill: accent,
+        primaryButtonHover: darkenHex(form.primary),
+        secondary: form.secondary,
+        secondaryButtonColor: form.secondary,
+        secondaryButtonBg: form.background,
+        accent: form.accent,
+        ctaFill: form.accent,
         ctaText: DEFAULT_BRAND_CONFIG.ctaText,
-        background,
-        contentBg,
+        background: form.background,
+        contentBg: form.contentBg,
         cardBg: DEFAULT_BRAND_CONFIG.cardBg,
-        linkColor: primary,
-        headingFont,
-        bodyFont,
-        font: bodyFont,
-        logoUrl: logoUrl || null,
+        linkColor: form.primary,
+        headingFont: form.headingFont,
+        bodyFont: form.bodyFont,
+        font: form.bodyFont,
+        logoUrl: form.logoUrl || null,
       };
       const res = await fetch(`/api/courses/${courseId}`, {
         method: "PATCH",
@@ -146,8 +200,8 @@ export default function BrandingPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error((data as { error?: string }).error || "Save failed");
       }
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setSaved(form);
+      toast("Branding saved");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
     } finally {
@@ -155,167 +209,118 @@ export default function BrandingPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <main className="p-6 lg:p-8">
-        <p className="text-gray-500">Loading…</p>
-      </main>
-    );
-  }
+  if (loading) return <PageSkeleton label="Loading branding" />;
 
   return (
     <main className="p-6 lg:p-8">
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
           <h1 className="text-2xl font-bold">Branding</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Customise colours, logo, and fonts for the exported SCORM package.
+            How the exported course looks to learners: layout, colours, logo and fonts.
           </p>
         </div>
 
-        {error && (
-          <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>
-        )}
-        {success && (
-          <p className="rounded bg-green-50 p-3 text-sm text-green-700">Branding saved.</p>
-        )}
+        {error && <ErrorNote>{error}</ErrorNote>}
+
+        <section className="space-y-3">
+          <h2 className="text-lg font-semibold">Layout</h2>
+          <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Layout">
+            {COURSE_THEMES.map((theme) => {
+              const active = form.theme === theme.id;
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => set("theme", theme.id)}
+                  className={`rounded-lg border p-3 text-left transition-colors ${
+                    active
+                      ? "border-brand-500 bg-brand-50 ring-1 ring-brand-500"
+                      : "border-gray-200 bg-surface hover:border-gray-300"
+                  }`}
+                >
+                  <ThemeThumb theme={theme.id} form={form} />
+                  <span className="mt-2 block text-sm font-medium text-gray-900">{theme.name}</span>
+                  <span className="mt-0.5 block text-xs text-gray-500">{theme.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Colours</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <div>
-              <label htmlFor="primary" className="block text-sm font-medium text-gray-700">
-                Primary
-              </label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="primary"
-                  type="color"
-                  value={primary}
-                  onChange={(e) => setPrimary(e.target.value)}
-                  className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={primary}
-                  onChange={(e) => setPrimary(e.target.value)}
-                  className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="secondary" className="block text-sm font-medium text-gray-700">
-                Secondary
-              </label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="secondary"
-                  type="color"
-                  value={secondary}
-                  onChange={(e) => setSecondary(e.target.value)}
-                  className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={secondary}
-                  onChange={(e) => setSecondary(e.target.value)}
-                  className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="accent" className="block text-sm font-medium text-gray-700">
-                Accent
-              </label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="accent"
-                  type="color"
-                  value={accent}
-                  onChange={(e) => setAccent(e.target.value)}
-                  className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={accent}
-                  onChange={(e) => setAccent(e.target.value)}
-                  className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="background" className="block text-sm font-medium text-gray-700">
-                Page Background
-              </label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="background"
-                  type="color"
-                  value={background}
-                  onChange={(e) => setBackground(e.target.value)}
-                  className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={background}
-                  onChange={(e) => setBackground(e.target.value)}
-                  className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label htmlFor="contentBg" className="block text-sm font-medium text-gray-700">
-                Content Background
-              </label>
-              <div className="mt-1 flex items-center gap-2">
-                <input
-                  id="contentBg"
-                  type="color"
-                  value={contentBg}
-                  onChange={(e) => setContentBg(e.target.value)}
-                  className="h-10 w-14 cursor-pointer rounded border border-gray-300"
-                />
-                <input
-                  type="text"
-                  value={contentBg}
-                  onChange={(e) => setContentBg(e.target.value)}
-                  className="w-24 rounded border border-gray-300 px-2 py-1 text-sm"
-                />
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {COLOURS.map(({ key, label }) => {
+              const value = form[key] as string;
+              return (
+                <div key={key}>
+                  <label htmlFor={`${key}-picker`} className="block text-sm font-medium text-gray-700">
+                    {label}
+                  </label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      id={`${key}-picker`}
+                      type="color"
+                      value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"}
+                      onChange={(e) => set(key, e.target.value as never)}
+                      className="h-10 w-14 cursor-pointer rounded border border-gray-300 bg-surface"
+                    />
+                    <input
+                      type="text"
+                      aria-label={`${label} hex code`}
+                      value={value}
+                      onChange={(e) => set(key, e.target.value as never)}
+                      className="w-24 rounded-md border border-gray-300 bg-surface px-2 py-1 font-mono text-sm"
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Logo</h2>
-          {logoUrl ? (
+          {form.logoUrl ? (
             <div className="flex items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={logoUrl}
+                src={form.logoUrl}
                 alt="Course logo"
-                className="h-16 w-auto rounded border border-gray-200 bg-surface object-contain p-1"
+                className="h-16 w-auto rounded border border-gray-200 bg-white object-contain p-1"
               />
-              <button
-                type="button"
-                onClick={handleRemoveLogo}
-                className="text-sm text-red-600 hover:underline"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  set("logoUrl", null);
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
               >
                 Remove
-              </button>
+              </Button>
             </div>
           ) : (
             <div>
               <input
                 ref={fileInputRef}
                 type="file"
+                aria-label="Logo file"
                 accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                onChange={handleFileChange}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleUploadLogo(file);
+                }}
                 className="block text-sm text-gray-600 file:mr-4 file:rounded file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
                 disabled={uploading}
               />
               {uploading && <p className="mt-1 text-sm text-gray-500">Uploading…</p>}
-              <p className="mt-1 text-xs text-gray-400">
-                PNG, JPG, SVG, or WebP. Displayed in course header.
+              <p className="mt-1 text-xs text-gray-500">
+                PNG, JPG, SVG or WebP. Shown at the top of every page.
               </p>
             </div>
           )}
@@ -323,105 +328,88 @@ export default function BrandingPage() {
 
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Fonts</h2>
-          <p className="text-sm text-gray-500">
-            Select Google Fonts for headings and body text.
-          </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="headingFont" className="block text-sm font-medium text-gray-700">
                 Heading font
               </label>
-              <select
+              <Select
                 id="headingFont"
-                value={headingFont}
-                onChange={(e) => setHeadingFont(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                value={form.headingFont}
+                onChange={(e) => set("headingFont", e.target.value)}
+                className="mt-1"
               >
                 {POPULAR_FONTS.map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
             <div>
               <label htmlFor="bodyFont" className="block text-sm font-medium text-gray-700">
                 Body font
               </label>
-              <select
+              <Select
                 id="bodyFont"
-                value={bodyFont}
-                onChange={(e) => setBodyFont(e.target.value)}
-                className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+                value={form.bodyFont}
+                onChange={(e) => set("bodyFont", e.target.value)}
+                className="mt-1"
               >
                 {POPULAR_FONTS.map((f) => (
                   <option key={f} value={f}>
                     {f}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         </section>
 
-        <section
-          className="rounded-lg border border-gray-200 p-4"
-          style={{ backgroundColor: background }}
-        >
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: primary, fontFamily: headingFont }}
-          >
-            Preview
-          </h2>
+        <section>
+          <h2 className="text-lg font-semibold">Sample</h2>
+          {/* Fixed dark text: this box shows the learner's page, not the app's theme. */}
           <div
-            className="mt-3 rounded-b-lg p-4"
-            style={{ backgroundColor: contentBg, borderTop: `4px solid ${accent}` }}
+            className="mt-3 rounded-lg border border-gray-200 p-4 text-[#1a1a1a]"
+            style={{ backgroundColor: form.background }}
           >
-            <p className="text-sm" style={{ fontFamily: bodyFont }}>
-              This is sample body text using your selected body font, displayed on the content background.
-            </p>
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                className="rounded px-3 py-1.5 text-sm font-medium"
-                style={{ backgroundColor: primary, color: "#fff" }}
-              >
-                Primary
-              </button>
-              <button
-                type="button"
-                className="rounded border-2 px-3 py-1.5 text-sm font-medium"
-                style={{ borderColor: secondary, color: secondary, backgroundColor: background }}
-              >
-                Secondary
-              </button>
-              <button
-                type="button"
-                className="rounded px-3 py-1.5 text-sm font-medium"
-                style={{ backgroundColor: accent, color: "#1b0101" }}
-              >
-                Accent
-              </button>
+            <div
+              className="rounded-b-lg p-4"
+              style={{ backgroundColor: form.contentBg, borderTop: `4px solid ${form.accent}` }}
+            >
+              <p className="text-xl font-bold" style={{ fontFamily: `'${form.headingFont}', sans-serif` }}>
+                A page heading
+              </p>
+              <p className="mt-2 text-sm" style={{ fontFamily: `'${form.bodyFont}', sans-serif` }}>
+                Body text in your body font, on the content background.{" "}
+                <span style={{ color: form.primary, textDecoration: "underline" }}>A link</span>.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span
+                  className="rounded px-3 py-1.5 text-sm font-semibold"
+                  style={{ backgroundColor: form.primary, color: "#f8f8f8" }}
+                >
+                  Next →
+                </span>
+                <span
+                  className="rounded border-2 px-3 py-1.5 text-sm font-semibold"
+                  style={{ borderColor: form.secondary, color: form.secondary, backgroundColor: form.background }}
+                >
+                  ← Previous
+                </span>
+              </div>
             </div>
           </div>
         </section>
 
-        <div className="flex items-center gap-4 pt-4">
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="rounded bg-brand-600 px-5 py-2.5 text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            {saving ? "Saving…" : "Save branding"}
-          </button>
-          <Link
-            href={`/courses/${courseId}/preview`}
-            className="text-sm text-brand-600 hover:underline"
-          >
+        <div className="flex items-center gap-3 pt-2">
+          <Button onClick={handleSave} loading={saving} disabled={!dirty}>
+            {saving ? "Saving…" : dirty ? "Save branding" : "Saved"}
+          </Button>
+          <ButtonLink href={`/courses/${courseId}/preview`} variant="secondary">
             Preview course
-          </Link>
+          </ButtonLink>
+          {dirty && <span className="text-sm text-amber-700">Unsaved changes</span>}
         </div>
       </div>
     </main>

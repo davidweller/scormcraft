@@ -138,7 +138,7 @@ export async function importScormPackage(
     throw new ScormImportUnsupportedError(
       detection.kind === "own_export_html"
         ? `${detection.detail} Reading packages without a usable sidecar is not implemented yet.`
-        : "This package has no round-trip data. Importing third-party SCORM packages is not implemented yet.",
+        : "This package wasn't made in SCORMcraft, so it can't be imported yet. To bring in its content, paste it into a Word or Markdown file and use \"Import course\".",
       detection.kind === "own_export_html" ? "own_export_html" : "generic_html"
     );
   }
