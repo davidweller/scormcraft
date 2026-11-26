@@ -15,8 +15,6 @@ import {
   readStagedImport,
 } from "@/lib/scorm/import/staging";
 
-// Must match the value for this path in vercel.json, which wins on Vercel.
-export const maxDuration = 300;
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {

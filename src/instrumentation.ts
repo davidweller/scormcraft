@@ -1,6 +1,6 @@
 /**
- * Next.js startup hook. On the desktop build (SQLite), bring the local
- * database up to date before the first request is served.
+ * Next.js startup hook. Brings the local database up to date before the
+ * first request is served.
  *
  * The NEXT_RUNTIME check must wrap the import directly so the edge bundle
  * drops it (the runner uses node:fs).

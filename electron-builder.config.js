@@ -22,7 +22,7 @@ module.exports = {
     { from: '.next/standalone', to: 'app/.next/standalone', filter: ['**/*', '!**/.env*'] },
     { from: '.next/static', to: 'app/.next/standalone/.next/static' },
     { from: 'public', to: 'app/.next/standalone/public' },
-    { from: 'prisma/sqlite/migrations', to: 'app/migrations' },
+    { from: 'prisma/migrations', to: 'app/migrations' },
   ],
 
   win: {

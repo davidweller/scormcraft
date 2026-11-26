@@ -1,10 +1,10 @@
 /**
  * Ingest an asset out of an uploaded SCORM package.
  *
- * Mirrors prepareDocxForImport's behaviour: upload to Vercel Blob and create a
- * Media row when Blob is configured, otherwise degrade to an inline `data:` URL
- * so the content still appears. The `data:` path is a local-development
- * fallback, not a supported production mode — see the size cap below.
+ * Mirrors prepareDocxForImport's behaviour: store the file and create a Media
+ * row when file storage is set up, otherwise degrade to an inline `data:` URL
+ * so the content still appears. The `data:` path is a fallback for tests, not
+ * a supported mode — see the size cap below.
  */
 
 import { prisma } from "@/lib/db";
@@ -207,7 +207,7 @@ export async function ingestAsset(
         "data_url_cap",
         `${zipPath} is ${(buf.length / 1024).toFixed(
           0
-        )}KB; without Blob storage configured, assets over ${(
+        )}KB; without file storage set up, assets over ${(
           limits.dataUrlMax / 1024
         ).toFixed(0)}KB are not imported`
       );

@@ -1,12 +1,12 @@
 // SCORM Course Builder - Prisma schema
-// Compatible with Neon / Vercel Postgres
+// One local SQLite file per install; see src/lib/desktop/migrate.ts.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

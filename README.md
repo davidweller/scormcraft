@@ -1,43 +1,31 @@
-# SCORM Course Builder
+# SCORMcraft
 
-B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Builder_SaaS_PRD.md](./SCORM_Course_Builder_SaaS_PRD.md) for product scope.
+A Windows desktop app for AI-assisted SCORM course authoring and export. Everything is local: courses in a SQLite file and uploads on disk under `%APPDATA%\SCORMcraft\data`. There is no hosted web version; it was retired in November 2026. [SCORM_Course_Builder_SaaS_PRD.md](./SCORM_Course_Builder_SaaS_PRD.md) is the original product scope and still describes the old hosted stack.
 
 ## Stack
 
-- **App:** Next.js 14 (App Router) + TypeScript + Tailwind
-- **DB:** PostgreSQL (Neon / Vercel Postgres) with Prisma
-- **Storage:** Vercel Blob (optional; for uploads and later export zip)
+- **App:** Next.js 14 (App Router) + TypeScript + Tailwind, inside Electron
+- **DB:** SQLite with Prisma
+- **Storage:** files on disk, served at `/files/...`
 
 ## Setup
 
-1. **Install dependencies**
+1. Install dependencies: `npm install`
+2. Optional: copy `.env.example` to `.env` and add API keys. Keys can also be added in the app's Settings.
+3. Run it: `npm run dev`. This opens the app in an Electron window on port 3417, with its data in `.desktop-data/`. The database is created and migrated at startup.
 
-   ```bash
-   npm install
-   ```
+| Command | What it does |
+|---|---|
+| `npm run dev` (or `desktop:dev`) | Runs the app in an Electron window with local data in `.desktop-data/` |
+| `npm run desktop:build:win` | Builds `dist/SCORMcraft Setup <version>.exe` (about 5 minutes) |
+| `npm run db:migrate -- --name <change>` | After changing `prisma/schema.prisma`, writes the matching migration into `prisma/migrations/`. It works on a scratch database; the app applies the migration to real data at its next start |
+| `npm run test` · `npm run lint` | Unit tests and lint |
 
-2. **Environment**
+How it fits together:
 
-   Copy `.env.example` to `.env` and set:
-
-   - `DATABASE_URL` — PostgreSQL connection string (Neon or Vercel Postgres).
-   - `BLOB_READ_WRITE_TOKEN` — Optional; required for file uploads and export zip (Vercel Blob).
-
-3. **Database**
-
-   ```bash
-   npx prisma db push
-   # Optional: seed a sample course
-   npm run db:seed
-   ```
-
-4. **Run**
-
-   ```bash
-   npm run dev
-   ```
-
-   Open [http://localhost:3000](http://localhost:3000). Use **Courses** to list/create courses; click a course then **Edit course** to open the course builder (sidebar tree + block-based page editor).
+- `electron/main.js` starts the standalone Next server with the environment from `electron/env.js`: `DATABASE_URL` (a `file:` url), `STORAGE_DIR`, `SETTINGS_PATH` and `MIGRATIONS_DIR`. Server logs go to `%APPDATA%\SCORMcraft\logs\server.log`.
+- The packaged app has no Prisma CLI, so `src/lib/desktop/migrate.ts` applies `prisma/migrations` itself at startup.
+- `src/lib/blob.ts` stores files under `STORAGE_DIR`. Server code reads stored files with `fetchStored`, not `fetch`.
 
 ## API (Phase 1)
 
@@ -49,7 +37,7 @@ B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Bu
   - `POST .../pages`, `PATCH/DELETE .../pages/[pageId]`
   - `POST .../pages/[pageId]/content-blocks`, `PATCH/DELETE .../content-blocks/[blockId]`
   - `POST .../pages/[pageId]/interaction-blocks`, `PATCH/DELETE .../interaction-blocks/[blockId]`
-- `POST /api/uploads` — FormData with `file`; returns `{ url }`. Requires `BLOB_READ_WRITE_TOKEN`.
+- `POST /api/uploads` — FormData with `file`; returns `{ url }`.
 
 ## Starting a course
 
@@ -64,7 +52,7 @@ B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Bu
 - Saving the blueprint updates modules and lessons in place. Only ones removed from the blueprint are deleted, after a confirmation.
 - Lesson generation writes into empty lessons only. Regenerating a lesson that has content asks first, and replaces its text and headings but keeps images, tables, files and interactions.
 - "Rewrite with AI" on a block shows the new version beside the current one, with Replace, Insert below and Discard.
-- **History** (`/courses/[id]/history`): a version of the course is saved before a lesson is regenerated, before a module, lesson or page is deleted, and before a blueprint save that removes lessons. Any of the newest 25 can be restored. This uses the `CourseSnapshot` table: the desktop app adds it at startup; the web database needs `npm run db:push` once.
+- **History** (`/courses/[id]/history`): a version of the course is saved before a lesson is regenerated, before a module, lesson or page is deleted, and before a blueprint save that removes lessons. Any of the newest 25 can be restored.
 
 ## Course builder (Phase 2)
 
@@ -74,35 +62,18 @@ B2B SaaS for AI-assisted SCORM course authoring and export. See [SCORM_Course_Bu
 - **Page editor**: Edit page title; add and edit **content blocks** (text, heading, image, video embed, table, file download) and **interaction blocks** (multiple choice, true/false, reflection). Changes save on blur.
 - **File downloads**: attach .docx, .xlsx, .pptx, .pdf or .csv files that are bundled into the SCORM package. See [docs/file-downloads.md](./docs/file-downloads.md).
 
-## Windows desktop app
-
-The same app runs as a standalone Windows program, fully local: courses in a SQLite file and uploads on disk under `%APPDATA%\SCORMcraft\data`. No Neon, no Vercel Blob.
-
-| Command | What it does |
-|---|---|
-| `npm run desktop:dev` | Runs the app in an Electron window on port 3417 with local data in `.desktop-data/` (beside a normal `npm run dev`) |
-| `npm run desktop:build:win` | Builds `dist/SCORMcraft Setup <version>.exe` (about 5 minutes) |
-| `npm run db:migrate:desktop -- --name <change>` | After changing `prisma/schema.prisma`, creates the matching SQLite migration in `prisma/sqlite/migrations/`; the app applies it on next start |
-| `npx tsx scripts/neon-to-local.ts [--dry-run]` | Copies every course and Blob file from Neon into the desktop data folder. Read-only on Neon; safe to re-run. Close the app first |
-
-How it fits together:
-
-- `prisma/schema.prisma` stays the source of truth. `scripts/make-sqlite-schema.ts` derives the SQLite schema; its client is generated into `src/generated/prisma-sqlite`, and `src/lib/db.ts` picks a client from `DATABASE_URL` (`file:` means SQLite).
-- `STORAGE_DIR` switches `src/lib/blob.ts` to local files served at `/files/...`. Server code reads stored files with `fetchStored`, not `fetch`.
-- `electron/main.js` starts the standalone Next server with the environment from `electron/env.js`. Server logs go to `%APPDATA%\SCORMcraft\logs\server.log`.
-
-### AI providers
+## AI providers
 
 Settings (home page, then Settings) picks the provider; a course can override it in its own settings.
 
 | Provider | Needs |
 |---|---|
-| Claude subscription | [Claude Code](https://claude.com/claude-code) installed and signed in with a Pro/Max plan. Desktop only |
-| ChatGPT subscription | Codex CLI (`npm install -g @openai/codex`) signed in with a ChatGPT plan. Desktop only |
+| Claude subscription | [Claude Code](https://claude.com/claude-code) installed and signed in with a Pro/Max plan |
+| ChatGPT subscription | Codex CLI (`npm install -g @openai/codex`) signed in with a ChatGPT plan |
 | OpenAI API | An OpenAI key |
 | Anthropic API | An Anthropic key (default model `claude-opus-5-5`) |
 
-The subscription providers run the official CLI on your machine (`src/lib/llm/claude-cli.ts`, `codex-cli.ts`), so usage counts against your plan. They are for your own use, not for the hosted web version. Image generation still needs a Gemini key.
+The subscription providers run the official CLI on your machine (`src/lib/llm/claude-cli.ts`, `codex-cli.ts`), so usage counts against your plan. They are for your own use. Image generation still needs a Gemini key.
 
 ## MVP scope
 

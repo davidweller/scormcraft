@@ -4,7 +4,7 @@ import { uploadBlob, isBlobConfigured } from "@/lib/blob";
 export async function POST(request: Request) {
   if (!isBlobConfigured()) {
     return NextResponse.json(
-      { error: "Upload not configured. Set BLOB_READ_WRITE_TOKEN." },
+      { error: "File storage is not set up, so uploads are unavailable." },
       { status: 503 }
     );
   }

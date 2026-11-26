@@ -7,10 +7,8 @@ import { analyzeCourseDocument, type ImportedCourseData } from "@/lib/ai-course-
 import { getLlm, type LlmProvider } from "@/lib/llm";
 import { uploadBlob, isBlobConfigured } from "@/lib/blob";
 
-// Must match the value for this path in vercel.json, which wins on Vercel.
-export const maxDuration = 300; // section-by-section import can take several minutes
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB (above Vercel's 4.5MB body limit - self-hosted/local only)
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const DOCX_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

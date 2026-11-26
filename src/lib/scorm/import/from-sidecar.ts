@@ -136,7 +136,7 @@ export async function importFromSidecar(
                     code: "asset_degraded_data_url",
                     location: zipPath,
                     detail:
-                      "Blob storage is not configured, so this asset was inlined as a data URL.",
+                      "File storage is not set up, so this asset was inlined as a data URL.",
                   });
                 }
               } else {

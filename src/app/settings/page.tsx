@@ -14,7 +14,6 @@ interface KeyState {
 }
 
 interface SettingsResponse {
-  desktop: boolean;
   editable: boolean;
   defaultProvider: ProviderId | null;
   models: Partial<Record<ProviderId, string>>;
@@ -127,7 +126,7 @@ export default function AppSettingsPage() {
 
         {readOnly && (
           <p className="rounded bg-amber-50 p-3 text-sm text-amber-800">
-            These settings are read-only on the web version. Keys come from the server environment.
+            These settings are read-only because the app has no settings file. Keys come from the environment.
           </p>
         )}
         {error && <p className="rounded bg-red-50 p-3 text-sm text-red-700">{error}</p>}
@@ -146,7 +145,7 @@ export default function AppSettingsPage() {
             className="w-full rounded border border-gray-300 px-3 py-2"
           >
             <option value="">
-              Automatic ({data.desktop ? "Claude subscription if signed in, else an API key" : "first API key found"})
+              Automatic (Claude subscription if signed in, else an API key)
             </option>
             {data.providers.map((p) => (
               <option key={p.id} value={p.id}>
@@ -156,63 +155,61 @@ export default function AppSettingsPage() {
           </select>
         </section>
 
-        {data.desktop && (
-          <section className="space-y-5 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Subscriptions</h2>
-              <button
-                type="button"
-                onClick={() => void load()}
-                disabled={refreshing}
-                className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
-              >
-                {refreshing ? "Checking…" : "Check again"}
-              </button>
-            </div>
-            <p className="text-sm text-gray-500">
-              Use your Claude Pro/Max or ChatGPT plan instead of paying per request. SCORMcraft runs the official
-              command-line tool you sign in to, so usage counts against your plan&apos;s limits.
-            </p>
+        <section className="space-y-5 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Subscriptions</h2>
+            <button
+              type="button"
+              onClick={() => void load()}
+              disabled={refreshing}
+              className="rounded border border-gray-300 bg-surface px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+            >
+              {refreshing ? "Checking…" : "Check again"}
+            </button>
+          </div>
+          <p className="text-sm text-gray-500">
+            Use your Claude Pro/Max or ChatGPT plan instead of paying per request. SCORMcraft runs the official
+            command-line tool you sign in to, so usage counts against your plan&apos;s limits.
+          </p>
 
-            <SubscriptionRow
-              title="Claude subscription"
-              tool="Claude Code"
-              installed={claude?.installed ?? false}
-              signedIn={claude?.signedIn ?? false}
-              detail={
-                claude?.signedIn
-                  ? claude.authMethod === "claude.ai"
-                    ? `Signed in${claude.subscription ? ` (${claude.subscription} plan)` : ""}`
-                    : "Signed in with an API account, not a subscription"
-                  : undefined
-              }
-              onLogin={() => runCli("claude", "login")}
-              onInstall={() => runCli("claude", "install")}
-              model={models["claude-subscription"] ?? ""}
-              modelPlaceholder={`${data.modelDefaults["claude-subscription"]} (opus, sonnet, fable, or a model id)`}
-              onModel={(v) => setModels({ ...models, "claude-subscription": v })}
-              onSaveModel={() => save({ models: { "claude-subscription": models["claude-subscription"] ?? "" } })}
-              saving={saving}
-            />
+          <SubscriptionRow
+            title="Claude subscription"
+            tool="Claude Code"
+            installed={claude?.installed ?? false}
+            signedIn={claude?.signedIn ?? false}
+            detail={
+              claude?.signedIn
+                ? claude.authMethod === "claude.ai"
+                  ? `Signed in${claude.subscription ? ` (${claude.subscription} plan)` : ""}`
+                  : "Signed in with an API account, not a subscription"
+                : undefined
+            }
+            onLogin={() => runCli("claude", "login")}
+            onInstall={() => runCli("claude", "install")}
+            model={models["claude-subscription"] ?? ""}
+            modelPlaceholder={`${data.modelDefaults["claude-subscription"]} (opus, sonnet, fable, or a model id)`}
+            onModel={(v) => setModels({ ...models, "claude-subscription": v })}
+            onSaveModel={() => save({ models: { "claude-subscription": models["claude-subscription"] ?? "" } })}
+            saving={saving}
+          />
 
-            <div className="border-t border-gray-200" />
+          <div className="border-t border-gray-200" />
 
-            <SubscriptionRow
-              title="ChatGPT subscription"
-              tool="Codex"
-              installed={codex?.installed ?? false}
-              signedIn={codex?.signedIn ?? false}
-              detail={codex?.signedIn ? codex.detail : undefined}
-              onLogin={() => runCli("codex", "login")}
-              onInstall={() => runCli("codex", "install")}
-              model={models["chatgpt-subscription"] ?? ""}
-              modelPlaceholder="Codex default"
-              onModel={(v) => setModels({ ...models, "chatgpt-subscription": v })}
-              onSaveModel={() => save({ models: { "chatgpt-subscription": models["chatgpt-subscription"] ?? "" } })}
-              saving={saving}
-            />
-          </section>
-        )}
+          <SubscriptionRow
+            title="ChatGPT subscription"
+            tool="Codex"
+            installed={codex?.installed ?? false}
+            signedIn={codex?.signedIn ?? false}
+            detail={codex?.signedIn ? codex.detail : undefined}
+            onLogin={() => runCli("codex", "login")}
+            onInstall={() => runCli("codex", "install")}
+            model={models["chatgpt-subscription"] ?? ""}
+            modelPlaceholder="Codex default"
+            onModel={(v) => setModels({ ...models, "chatgpt-subscription": v })}
+            onSaveModel={() => save({ models: { "chatgpt-subscription": models["chatgpt-subscription"] ?? "" } })}
+            saving={saving}
+          />
+        </section>
 
         <section className="space-y-5 rounded-lg border border-gray-200 bg-surface p-5 shadow-sm">
           <h2 className="text-lg font-semibold">API keys</h2>
@@ -292,9 +289,7 @@ export default function AppSettingsPage() {
               </div>
             );
           })}
-          {data.desktop && (
-            <p className="text-xs text-gray-400">Keys are stored on this computer in the SCORMcraft settings file.</p>
-          )}
+          <p className="text-xs text-gray-400">Keys are stored on this computer in the SCORMcraft settings file.</p>
         </section>
       </div>
     </main>

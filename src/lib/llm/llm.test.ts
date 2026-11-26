@@ -5,9 +5,12 @@ import { join } from "node:path";
 import { extractJsonText, parseJsonObject } from "./json";
 import { parseClaudeCliOutput } from "./claude-cli";
 
+/** Whether the mocked Claude CLI reports a signed-in subscription. */
+const cli = vi.hoisted(() => ({ signedIn: true }));
+
 vi.mock("./claude-cli", async (orig) => {
   const real = await orig<typeof import("./claude-cli")>();
-  return { ...real, claudeCliStatus: vi.fn(async () => ({ installed: true, signedIn: true })) };
+  return { ...real, claudeCliStatus: vi.fn(async () => ({ installed: true, signedIn: cli.signedIn })) };
 });
 
 describe("parseJsonObject", () => {
@@ -56,19 +59,21 @@ describe("getLlm provider resolution", () => {
     vi.stubEnv("OPENAI_API_KEY", "");
     vi.stubEnv("ANTHROPIC_API_KEY", "");
     vi.stubEnv("SETTINGS_PATH", join(dir, "settings.json"));
-    vi.stubEnv("SCORMCRAFT_DESKTOP", "");
+    cli.signedIn = true;
   });
   afterEach(() => {
     vi.unstubAllEnvs();
     rmSync(dir, { recursive: true, force: true });
   });
 
-  it("fails with a setup error when nothing is configured (web)", async () => {
+  it("fails with a setup error when nothing is configured", async () => {
+    cli.signedIn = false;
     const { getLlm, LlmSetupError } = await import("./index");
     await expect(getLlm(null)).rejects.toBeInstanceOf(LlmSetupError);
   });
 
-  it("uses an OpenAI env key on the web", async () => {
+  it("uses an OpenAI env key when no subscription is signed in", async () => {
+    cli.signedIn = false;
     vi.stubEnv("OPENAI_API_KEY", "sk-test");
     const { getLlm } = await import("./index");
     expect((await getLlm(null)).id).toBe("openai-api");
@@ -81,22 +86,13 @@ describe("getLlm provider resolution", () => {
     expect(llm.id).toBe("anthropic-api");
   });
 
-  it("never offers subscription providers on the web", async () => {
-    vi.stubEnv("OPENAI_API_KEY", "sk-test");
-    const { getLlm, availableProviderIds } = await import("./index");
-    expect(availableProviderIds()).not.toContain("claude-subscription");
-    expect((await getLlm({ aiProvider: "claude-subscription" })).id).toBe("openai-api");
-  });
-
-  it("defaults to the Claude subscription on desktop when signed in", async () => {
-    vi.stubEnv("SCORMCRAFT_DESKTOP", "1");
+  it("defaults to the Claude subscription when signed in", async () => {
     vi.stubEnv("OPENAI_API_KEY", "sk-test");
     const { getLlm } = await import("./index");
     expect((await getLlm(null)).id).toBe("claude-subscription");
   });
 
   it("honours the app default from settings.json", async () => {
-    vi.stubEnv("SCORMCRAFT_DESKTOP", "1");
     writeFileSync(
       join(dir, "settings.json"),
       JSON.stringify({ defaultProvider: "chatgpt-subscription", models: {}, apiKeys: {} })

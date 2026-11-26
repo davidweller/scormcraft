@@ -1,7 +1,6 @@
 /**
- * Serves files from local storage (desktop app). Urls look like
- * /files/<pathname>; see src/lib/blob.ts. 404 on the web app, where
- * storage is Vercel Blob and urls are absolute.
+ * Serves files from local storage. Urls look like /files/<pathname>; see
+ * src/lib/blob.ts.
  */
 import { openLocalFile } from "@/lib/blob";
 

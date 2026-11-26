@@ -162,7 +162,7 @@ function collectWarnings(loss: LossReport): string[] {
   const warnings: string[] = [];
   if (loss.counts.asset_degraded_data_url) {
     warnings.push(
-      `${loss.counts.asset_degraded_data_url} asset(s) were inlined because Blob storage is not configured.`
+      `${loss.counts.asset_degraded_data_url} asset(s) were inlined because File storage is not set up.`
     );
   }
   if (loss.counts.asset_missing || loss.counts.asset_too_large) {

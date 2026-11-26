@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { restoreSnapshot } from "@/lib/snapshots";
 
-export const maxDuration = 60;
-
 /** Puts the course back to a saved version. The current state is saved first. */
 export async function POST(
   _request: Request,

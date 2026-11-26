@@ -6,7 +6,7 @@ const path = require('path');
 const os = require('os');
 
 // Fixed, so localStorage (saved quiz answers) survives restarts.
-// Not 3000, so it doesn't clash with `npm run dev`.
+// Not 3000, so it doesn't clash with other local dev servers.
 const PORT = 3417;
 
 function toFileUrl(p) {
@@ -33,16 +33,12 @@ function buildServerEnv({ dataDir, migrationsDir }) {
     ...process.env,
     PORT: String(PORT),
     HOSTNAME: '127.0.0.1',
-    SCORMCRAFT_DESKTOP: '1',
     DATABASE_URL: toFileUrl(path.join(dataDir, 'scormcraft.db')),
     STORAGE_DIR: path.join(dataDir, 'files'),
     SETTINGS_PATH: path.join(dataDir, 'settings.json'),
     MIGRATIONS_DIR: migrationsDir,
     PATH: [process.env.PATH || '', ...cliPathEntries()].join(path.delimiter),
   };
-  // Never let a developer's cloud credentials leak into the local app.
-  delete env.BLOB_READ_WRITE_TOKEN;
-  delete env.VERCEL_OIDC_TOKEN;
   return env;
 }
 

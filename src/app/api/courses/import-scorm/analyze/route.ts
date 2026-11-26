@@ -6,11 +6,11 @@
  * commit time would upload everything twice.
  *
  * Two inputs:
- *   - JSON `{ importToken, filename }` after a direct-to-Blob client upload.
+ *   - JSON `{ importToken, filename }` after the package was streamed to
+ *     /upload-local.
  *     The package url is derived from the token server-side; no client-supplied
  *     url is ever fetched, so there is no SSRF surface.
- *   - multipart/form-data with a `file`, capped well under Vercel's 4.5MB body
- *     limit. Local development and small packages only.
+ *   - multipart/form-data with a `file`: the fallback, small packages only.
  */
 
 import { NextResponse } from "next/server";
@@ -28,10 +28,7 @@ import {
   stageImport,
 } from "@/lib/scorm/import/staging";
 
-// Must match the value for this path in vercel.json, which wins on Vercel.
-export const maxDuration = 300;
-
-/** Vercel's request body limit is 4.5MB; stay under it with room to spare. */
+/** Cap for the multipart fallback. */
 const MULTIPART_MAX_BYTES = 4 * 1024 * 1024;
 
 interface PackageInput {
@@ -51,7 +48,7 @@ async function readPackageFromBlob(body: unknown): Promise<PackageInput> {
     throw new BadRequest("A valid importToken is required.");
   }
   if (!isBlobConfigured()) {
-    throw new BadRequest("Blob storage is not configured.", 503);
+    throw new BadRequest("File storage is not set up.", 503);
   }
 
   const blob = await findBlobByPathname(packagePath(importToken));
@@ -84,7 +81,7 @@ async function readPackageFromMultipart(request: Request): Promise<PackageInput>
     throw new BadRequest(
       `This upload path is limited to ${(MULTIPART_MAX_BYTES / 1024 / 1024).toFixed(
         0
-      )}MB. Configure Blob storage to import larger packages.`,
+      )}MB. File storage is needed to import larger packages.`,
       413
     );
   }

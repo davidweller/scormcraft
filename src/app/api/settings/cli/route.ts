@@ -4,7 +4,6 @@
  * The commands are fixed here; nothing from the request reaches the shell.
  */
 import { NextResponse } from "next/server";
-import { isDesktop } from "@/lib/settings";
 import { openTerminal } from "@/lib/llm/cli";
 import { forgetCliStatus } from "@/lib/llm";
 
@@ -20,9 +19,6 @@ const COMMANDS = {
 } as const;
 
 export async function POST(request: Request) {
-  if (!isDesktop()) {
-    return NextResponse.json({ error: "Only available in the desktop app." }, { status: 400 });
-  }
   const { tool, action } = (await request.json().catch(() => ({}))) as { tool?: string; action?: string };
   if ((tool !== "claude" && tool !== "codex") || (action !== "login" && action !== "install")) {
     return NextResponse.json({ error: "Unknown tool or action." }, { status: 400 });

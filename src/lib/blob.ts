@@ -1,4 +1,3 @@
-import { put, del, list } from "@vercel/blob";
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, extname, join, posix, relative, resolve, sep } from "node:path";
@@ -6,26 +5,22 @@ import { randomBytes } from "node:crypto";
 import { Readable } from "node:stream";
 
 /**
- * File storage with two backends:
- *   - "local":  files under STORAGE_DIR, served by src/app/files/[...path]. The
- *               desktop app uses this. Urls are relative: `/files/<pathname>`.
- *   - "vercel": Vercel Blob, when BLOB_READ_WRITE_TOKEN is set. The web app.
- *   - "none":   neither; uploads fail with a clear error.
+ * File storage: files under STORAGE_DIR (set by electron/env.js), served by
+ * src/app/files/[...path]. Urls are relative: `/files/<pathname>`. Without
+ * STORAGE_DIR, uploads fail with a clear error.
  *
  * Server code that needs a stored file's bytes must use `fetchStored`, not
  * `fetch`: a relative `/files/...` url can't be fetched from the server.
  */
 
 const STORAGE_DIR = process.env.STORAGE_DIR?.trim() || "";
-const BLOB_STORE: "local" | "vercel" | "none" = STORAGE_DIR
-  ? "local"
-  : process.env.BLOB_READ_WRITE_TOKEN
-    ? "vercel"
-    : "none";
+const BLOB_STORE: "local" | "none" = STORAGE_DIR ? "local" : "none";
+
+const NOT_CONFIGURED = "File storage is not set up (STORAGE_DIR is missing).";
 
 export const LOCAL_URL_PREFIX = "/files/";
 
-export function storageBackend(): "local" | "vercel" | "none" {
+export function storageBackend(): "local" | "none" {
   return BLOB_STORE;
 }
 
@@ -80,7 +75,7 @@ async function toBuffer(body: Blob | Buffer | ReadableStream): Promise<Buffer> {
   return Buffer.from(await new Response(body).arrayBuffer());
 }
 
-/** Keeps the exact pathname when free (callers rely on that), else adds a suffix like Blob does. */
+/** Keeps the exact pathname when free (callers rely on that), else adds a random suffix. */
 function freePathname(pathname: string): string {
   if (!existsSync(localDiskPath(pathname))) return pathname;
   const ext = extname(pathname);
@@ -121,21 +116,12 @@ export async function uploadBlob(
   body: Blob | Buffer | ReadableStream,
   options?: { contentType?: string }
 ): Promise<{ url: string }> {
-  if (BLOB_STORE === "local") {
-    const finalPath = freePathname(cleanPathname(pathname));
-    const disk = localDiskPath(finalPath);
-    await mkdir(dirname(disk), { recursive: true });
-    await writeFile(disk, await toBuffer(body));
-    return { url: localUrl(finalPath) };
-  }
-  if (BLOB_STORE !== "vercel") {
-    throw new Error("Blob storage not configured. Set BLOB_READ_WRITE_TOKEN.");
-  }
-  const blob = await put(pathname, body, {
-    access: "public",
-    contentType: options?.contentType,
-  });
-  return { url: blob.url };
+  if (BLOB_STORE !== "local") throw new Error(NOT_CONFIGURED);
+  const finalPath = freePathname(cleanPathname(pathname));
+  const disk = localDiskPath(finalPath);
+  await mkdir(dirname(disk), { recursive: true });
+  await writeFile(disk, await toBuffer(body));
+  return { url: localUrl(finalPath) };
 }
 
 /** Write a stream straight to local storage at an exact pathname (large uploads). */
@@ -144,7 +130,7 @@ export async function writeLocalStream(
   body: ReadableStream<Uint8Array>,
   maxBytes: number
 ): Promise<{ url: string; size: number }> {
-  if (BLOB_STORE !== "local") throw new Error("Local storage is not configured.");
+  if (BLOB_STORE !== "local") throw new Error(NOT_CONFIGURED);
   const clean = cleanPathname(pathname);
   const disk = localDiskPath(clean);
   await mkdir(dirname(disk), { recursive: true });
@@ -167,60 +153,40 @@ export async function writeLocalStream(
 }
 
 export async function deleteBlob(url: string): Promise<void> {
-  if (BLOB_STORE === "local") {
-    const pathname = localPathnameFromUrl(url);
-    if (pathname) await rm(localDiskPath(pathname), { force: true });
-    return;
-  }
-  if (BLOB_STORE !== "vercel") return;
-  await del(url);
+  if (BLOB_STORE !== "local") return;
+  const pathname = localPathnameFromUrl(url);
+  if (pathname) await rm(localDiskPath(pathname), { force: true });
 }
 
-/**
- * Find a stored blob by its exact pathname.
- *
- * `put` adds a random suffix to the pathname, so a url cannot be reconstructed
- * from the path it was written under. Listing the prefix is the only way to
- * recover it in a later invocation.
- */
+/** Find a stored file by its exact pathname. */
 export async function findBlobByPathname(
   pathname: string
 ): Promise<{ url: string; size: number; uploadedAt: Date } | null> {
-  if (BLOB_STORE === "local") {
-    try {
-      const s = await stat(localDiskPath(pathname));
-      return s.isFile() ? { url: localUrl(cleanPathname(pathname)), size: s.size, uploadedAt: s.mtime } : null;
-    } catch {
-      return null;
-    }
+  if (BLOB_STORE !== "local") return null;
+  try {
+    const s = await stat(localDiskPath(pathname));
+    return s.isFile() ? { url: localUrl(cleanPathname(pathname)), size: s.size, uploadedAt: s.mtime } : null;
+  } catch {
+    return null;
   }
-  if (BLOB_STORE !== "vercel") return null;
-  const prefix = pathname.replace(/\/[^/]*$/, "/");
-  const { blobs } = await list({ prefix, limit: 1000 });
-  const match = blobs.find((b) => b.pathname === pathname);
-  return match ? { url: match.url, size: match.size, uploadedAt: match.uploadedAt } : null;
 }
 
 /** Every blob under a prefix, for cleanup of an abandoned import. */
 export async function listBlobs(
   prefix: string
 ): Promise<{ url: string; pathname: string; uploadedAt: Date }[]> {
-  if (BLOB_STORE === "local") {
-    const root = resolve(STORAGE_DIR);
-    const start = localDiskPath(prefix.replace(/\/+$/, "") || ".");
-    if (!existsSync(start)) return [];
-    const entries = await readdir(start, { recursive: true, withFileTypes: true });
-    return entries
-      .filter((e) => e.isFile())
-      .map((e) => {
-        const full = join(e.parentPath, e.name);
-        const pathname = relative(root, full).split(sep).join("/");
-        return { url: localUrl(pathname), pathname, uploadedAt: statSync(full).mtime };
-      });
-  }
-  if (BLOB_STORE !== "vercel") return [];
-  const { blobs } = await list({ prefix, limit: 1000 });
-  return blobs.map((b) => ({ url: b.url, pathname: b.pathname, uploadedAt: b.uploadedAt }));
+  if (BLOB_STORE !== "local") return [];
+  const root = resolve(STORAGE_DIR);
+  const start = localDiskPath(prefix.replace(/\/+$/, "") || ".");
+  if (!existsSync(start)) return [];
+  const entries = await readdir(start, { recursive: true, withFileTypes: true });
+  return entries
+    .filter((e) => e.isFile())
+    .map((e) => {
+      const full = join(e.parentPath, e.name);
+      const pathname = relative(root, full).split(sep).join("/");
+      return { url: localUrl(pathname), pathname, uploadedAt: statSync(full).mtime };
+    });
 }
 
 /**

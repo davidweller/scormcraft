@@ -36,7 +36,7 @@ export const NOTE_DESCRIPTIONS: Record<NoteCode, string> = {
   asset_too_large: "Assets over the size limit were skipped.",
   asset_type_unsupported: "Assets of an unsupported type were skipped.",
   asset_degraded_data_url:
-    "Blob storage is not configured, so assets were embedded inline instead of stored.",
+    "File storage is not set up, so assets were embedded inline instead of stored.",
   answer_key_unknown:
     "Quiz questions were imported with the first option marked correct, because the package does not say which answer is right. Check each one.",
   multi_select_downgraded:

@@ -1,9 +1,9 @@
 /**
  * App-wide settings: the default AI provider, models and API keys.
  *
- * Desktop app: stored in SETTINGS_PATH (%APPDATA%/SCORMcraft/data/settings.json),
- * edited on the /settings page. Web app: SETTINGS_PATH is unset, nothing is
- * stored, and keys come from the environment as before.
+ * Stored in SETTINGS_PATH (%APPDATA%/SCORMcraft/data/settings.json) and edited
+ * on the /settings page. With SETTINGS_PATH unset (tests), nothing is stored
+ * and keys come from the environment.
  *
  * Per-course settings (`Course.settings.apiKeys`, `.aiProvider`) override these.
  */
@@ -33,11 +33,6 @@ const EMPTY: AppSettings = { defaultProvider: null, models: {}, apiKeys: {} };
 
 export function settingsPath(): string | null {
   return process.env.SETTINGS_PATH?.trim() || null;
-}
-
-/** Subscription providers drive local CLIs, so they exist only in the desktop app. */
-export function isDesktop(): boolean {
-  return process.env.SCORMCRAFT_DESKTOP === "1";
 }
 
 let cache: { mtimeMs: number; value: AppSettings } | null = null;
@@ -78,7 +73,7 @@ export function readAppSettings(): AppSettings {
 
 export function writeAppSettings(next: AppSettings): AppSettings {
   const p = settingsPath();
-  if (!p) throw new Error("Settings can only be saved in the desktop app.");
+  if (!p) throw new Error("Settings can't be saved: SETTINGS_PATH is not set.");
   const value = sanitize(next);
   mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, JSON.stringify(value, null, 2), "utf8");

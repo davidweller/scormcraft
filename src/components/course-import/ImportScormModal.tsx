@@ -2,7 +2,6 @@
 
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import { upload } from "@vercel/blob/client";
 import { groupLoss, type LossGroup } from "@/lib/scorm/import/preview";
 import type { ScormImportPreview } from "@/lib/scorm/import/types";
 
@@ -16,7 +15,7 @@ type Step = "upload" | "uploading" | "analyzing" | "review" | "creating";
 
 /** Mirrors DEFAULT_ZIP_LIMITS.maxArchiveBytes on the server. */
 const MAX_PACKAGE_BYTES = 200 * 1024 * 1024;
-/** The multipart fallback's cap, used when Blob storage is not configured. */
+/** The multipart fallback's cap, used when the streamed upload fails. */
 const MULTIPART_MAX_BYTES = 4 * 1024 * 1024;
 
 function newImportToken(): string {
@@ -93,10 +92,8 @@ export default function ImportScormModal({
   }
 
   /**
-   * Upload straight to Blob, then ask the server to analyse it by token.
-   *
-   * Falls back to a multipart POST when Blob is not configured, which is the
-   * local-development path and is capped well below Vercel's body limit.
+   * Stream the package to local storage, then ask the server to analyse it
+   * by token. Falls back to a multipart POST for small packages if that fails.
    */
   async function handleFileSelect(file: File) {
     if (!/\.zip$/i.test(file.name)) {
@@ -122,27 +119,16 @@ export default function ImportScormModal({
       try {
         setStep("uploading");
         setUploadBytes(file.size);
-        if (process.env.NEXT_PUBLIC_STORAGE === "local") {
-          // Desktop app: stream the package into local storage, same pathname.
-          const put = await fetch(`/api/courses/import-scorm/upload-local?token=${importToken}`, {
-            method: "PUT",
-            headers: { "Content-Type": file.type || "application/zip" },
-            body: file,
-            signal: controller.signal,
-          });
-          if (!put.ok) {
-            const data = (await put.json().catch(() => ({}))) as { error?: string };
-            throw new Error(data.error || "Upload failed.");
-          }
-        } else {
-          await upload(`imports/scorm/${importToken}/package.zip`, file, {
-            access: "public",
-            handleUploadUrl: "/api/courses/import-scorm/upload-url",
-            contentType: file.type || "application/zip",
-            // No onUploadProgress: it arrived in @vercel/blob 0.26 and this
-            // project is pinned to 0.24 for the existing put/del/list callers.
-            // The upload step shows an indeterminate spinner instead.
-          });
+        // Stream the package into local storage, at the pathname /analyze looks up.
+        const put = await fetch(`/api/courses/import-scorm/upload-local?token=${importToken}`, {
+          method: "PUT",
+          headers: { "Content-Type": file.type || "application/zip" },
+          body: file,
+          signal: controller.signal,
+        });
+        if (!put.ok) {
+          const data = (await put.json().catch(() => ({}))) as { error?: string };
+          throw new Error(data.error || "Upload failed.");
         }
         analyzeInit = {
           method: "POST",
@@ -151,14 +137,12 @@ export default function ImportScormModal({
           signal: controller.signal,
         };
       } catch (uploadError) {
-        // Blob is not configured (503 from upload-url) or the handshake failed.
+        // The streamed upload failed; small packages can still go as a form post.
         if (file.size > MULTIPART_MAX_BYTES) {
           throw new Error(
-            `Direct upload is unavailable, and this package is ${formatBytes(
+            `The upload failed, and this package is ${formatBytes(
               file.size
-            )}. Packages over ${formatBytes(
-              MULTIPART_MAX_BYTES
-            )} need Blob storage configured. (${
+            )}, which is too large to retry another way. (${
               uploadError instanceof Error ? uploadError.message : "upload failed"
             })`
           );

@@ -1,10 +1,9 @@
 /**
- * App settings (desktop): default AI provider, models, API keys.
+ * App settings: default AI provider, models, API keys.
  * Keys are never sent back to the page, only whether each is set.
  */
 import { NextResponse } from "next/server";
 import {
-  isDesktop,
   isProviderId,
   readAppSettings,
   settingsPath,
@@ -30,12 +29,8 @@ function keyState(stored?: string, envName?: string) {
 
 export async function GET() {
   const s = readAppSettings();
-  const desktop = isDesktop();
-  const [claude, codex] = desktop
-    ? await Promise.all([claudeCliStatus(), codexCliStatus()])
-    : [null, null];
+  const [claude, codex] = await Promise.all([claudeCliStatus(), codexCliStatus()]);
   return NextResponse.json({
-    desktop,
     editable: Boolean(settingsPath()),
     defaultProvider: s.defaultProvider,
     models: s.models,
@@ -61,7 +56,7 @@ export async function GET() {
  */
 export async function PUT(request: Request) {
   if (!settingsPath()) {
-    return NextResponse.json({ error: "Settings can only be saved in the desktop app." }, { status: 400 });
+    return NextResponse.json({ error: "Settings can't be saved: SETTINGS_PATH is not set." }, { status: 400 });
   }
   const body = (await request.json().catch(() => ({}))) as {
     defaultProvider?: unknown;

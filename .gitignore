@@ -23,11 +23,8 @@ yarn-error.log*
 .env
 .env*.local
 
-# vercel
+# old hosting link, safe to delete
 .vercel
-
-# prisma
-prisma/migrations/**/migration_lock.toml
 
 # ide
 .idea
@@ -43,6 +40,4 @@ tsconfig.tsbuildinfo
 # Desktop build
 dist/
 .desktop-data/
-prisma/sqlite/schema.prisma
-src/generated/
 .next-desktop/

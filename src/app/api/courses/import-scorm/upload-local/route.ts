@@ -1,7 +1,6 @@
 /**
- * Local-storage counterpart of upload-url (desktop app): the browser PUTs the
- * raw package here and it is streamed to the same staging pathname that
- * /analyze looks up by token. No serverless body limit applies locally.
+ * The browser PUTs the raw SCORM package here and it is streamed to the
+ * staging pathname that /analyze looks up by token.
  */
 import { NextResponse } from "next/server";
 import { storageBackend, writeLocalStream } from "@/lib/blob";
@@ -10,7 +9,7 @@ import { STAGING_PREFIX, isValidImportToken } from "@/lib/scorm/import/staging";
 
 export async function PUT(request: Request): Promise<NextResponse> {
   if (storageBackend() !== "local") {
-    return NextResponse.json({ error: "Local storage is not configured." }, { status: 503 });
+    return NextResponse.json({ error: "File storage is not set up." }, { status: 503 });
   }
   const token = new URL(request.url).searchParams.get("token");
   if (!isValidImportToken(token)) {

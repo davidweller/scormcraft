@@ -9,9 +9,8 @@
  * deliberately does not.)
  *
  * Two backends:
- *   - Vercel Blob, when configured. Survives across serverless invocations.
- *   - An in-process map, otherwise. Works for local development only, and is
- *     lost on restart. Stated plainly rather than papered over.
+ *   - File storage, when set up. Survives a restart.
+ *   - An in-process map, otherwise (tests). Lost on restart.
  */
 
 import { deleteBlob, fetchStored, findBlobByPathname, isBlobConfigured, uploadBlob } from "@/lib/blob";
@@ -43,9 +42,7 @@ interface MemoryEntry {
 /**
  * In-process fallback store.
  *
- * Module scope, so it is per-instance. On Vercel that means a staged import may
- * land on one lambda and the commit on another, which is exactly why Blob is
- * the real backend and this one is for local development.
+ * Module scope, so it is lost on restart; file storage is the real backend.
  */
 const memoryStore = new Map<string, MemoryEntry>();
 
@@ -109,9 +106,8 @@ export async function readStagedImport(importToken: string): Promise<StagedImpor
 
   if (!isBlobConfigured()) return null;
 
-  // Not in this instance's memory, which is the normal case on Vercel: the
-  // analyze and commit calls land on different lambdas. The pathname is built
-  // from a validated token, never from client-supplied text.
+  // Not in memory (the app restarted since the analyze call). The pathname is
+  // built from a validated token, never from client-supplied text.
   try {
     const blob = await findBlobByPathname(stagingPath(importToken));
     if (!blob) return null;

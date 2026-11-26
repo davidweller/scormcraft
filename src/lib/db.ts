@@ -1,45 +1,18 @@
-import { Prisma as PgPrisma, PrismaClient as PgPrismaClient } from "@prisma/client";
-import { join } from "node:path";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 /**
- * One Prisma client, chosen by DATABASE_URL.
- *
- * The web app runs on Postgres (`@prisma/client`). The desktop app runs on a
- * local SQLite file (`file:` url) whose client is generated from the same
- * models into src/generated/prisma-sqlite (see scripts/make-sqlite-schema.ts).
- * The model API is identical, so the SQLite client is typed as the Postgres one.
- *
- * Runtime values such as `Prisma.JsonNull` are tied to the client that made
- * them, so use `JsonNull` from here. Importing `Prisma` from "@prisma/client"
- * is fine for types only.
+ * The app's one Prisma client, on a local SQLite file. electron/env.js sets
+ * DATABASE_URL to a `file:` url in the data folder.
  */
 
-const IS_SQLITE = (process.env.DATABASE_URL ?? "").startsWith("file:");
+/** `Prisma.JsonNull`, re-exported so callers need only a type import of `Prisma`. */
+export const JsonNull: typeof Prisma.JsonNull = Prisma.JsonNull;
 
-/**
- * Loaded from disk at runtime, never bundled: webpack's file tracer can't
- * follow the generated client and the build fails if it tries. The standalone
- * build copies the folder in via outputFileTracingIncludes (next.config.mjs),
- * and the server's cwd is the project (dev) or standalone root (packaged).
- */
-function loadSqlite(): { PrismaClient: typeof PgPrismaClient; Prisma: typeof PgPrisma } {
-  const dir =
-    process.env.PRISMA_SQLITE_CLIENT_DIR || join(process.cwd(), "src", "generated", "prisma-sqlite");
-  const nodeRequire = eval("require") as NodeRequire;
-  return nodeRequire(dir);
-}
-
-const active = IS_SQLITE ? loadSqlite() : { PrismaClient: PgPrismaClient, Prisma: PgPrisma };
-
-/** `Prisma.JsonNull` from whichever client is active. */
-export const JsonNull: typeof PgPrisma.JsonNull = active.Prisma.JsonNull;
-export const isSqlite = IS_SQLITE;
-
-const globalForPrisma = globalThis as unknown as { prisma: PgPrismaClient };
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 export const prisma =
   globalForPrisma.prisma ??
-  new active.PrismaClient({
+  new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 

@@ -4,7 +4,7 @@ import { fetchStored } from "@/lib/blob";
 
 /**
  * Serves an uploaded media file as an attachment under its original filename.
- * Used by preview, where links to Blob storage are cross-origin and the `download` attribute is ignored.
+ * Used by preview, where links to stored files may be cross-origin and the `download` attribute is ignored.
  * Only URLs recorded in the Media table are served, so this can't be used as an open proxy.
  */
 export async function GET(request: Request) {

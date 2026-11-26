@@ -5,7 +5,7 @@
  * automatic: Claude subscription (desktop, signed in) -> OpenAI key ->
  * Anthropic key. Keys resolve course -> app settings -> environment.
  */
-import { isDesktop, readAppSettings, resolveApiKey, type ProviderId } from "@/lib/settings";
+import { readAppSettings, resolveApiKey, type ProviderId } from "@/lib/settings";
 import { anthropicProvider } from "./anthropic-api";
 import { claudeCliProvider, claudeCliStatus } from "./claude-cli";
 import { codexCliProvider } from "./codex-cli";
@@ -27,8 +27,6 @@ export interface CourseAiSettings {
   apiKeys?: { openai?: string | null; anthropic?: string | null; gemini?: string | null } | null;
 }
 
-const SUBSCRIPTION: ProviderId[] = ["claude-subscription", "chatgpt-subscription"];
-
 let claudeSignedIn: { at: number; value: boolean } | null = null;
 async function claudeReady(): Promise<boolean> {
   if (claudeSignedIn && Date.now() - claudeSignedIn.at < 60_000) return claudeSignedIn.value;
@@ -42,8 +40,7 @@ export function forgetCliStatus(): void {
 }
 
 export function availableProviderIds(): ProviderId[] {
-  const all: ProviderId[] = ["openai-api", "anthropic-api", "claude-subscription", "chatgpt-subscription"];
-  return isDesktop() ? all : all.filter((p) => !SUBSCRIPTION.includes(p));
+  return ["openai-api", "anthropic-api", "claude-subscription", "chatgpt-subscription"];
 }
 
 async function resolveProviderId(course?: CourseAiSettings | null): Promise<ProviderId> {
@@ -53,13 +50,11 @@ async function resolveProviderId(course?: CourseAiSettings | null): Promise<Prov
   );
   if (chosen) return chosen;
 
-  if (isDesktop() && (await claudeReady())) return "claude-subscription";
+  if (await claudeReady()) return "claude-subscription";
   if (resolveApiKey("openai", course?.apiKeys?.openai)) return "openai-api";
   if (resolveApiKey("anthropic", course?.apiKeys?.anthropic)) return "anthropic-api";
   throw new LlmSetupError(
-    isDesktop()
-      ? "No AI provider is set up. Open Settings to sign in with your Claude or ChatGPT subscription, or add an API key."
-      : "No AI provider is set up. Add OPENAI_API_KEY or ANTHROPIC_API_KEY, or use Bring your own key in course settings.",
+    "No AI provider is set up. Open Settings to sign in with your Claude or ChatGPT subscription, or add an API key.",
     null
   );
 }

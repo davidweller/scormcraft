@@ -2,7 +2,7 @@
  * The round-trip test: export a course, re-import the package, assert the tree
  * that comes back is the tree that went in.
  *
- * Runs without a database or Blob storage. With BLOB_READ_WRITE_TOKEN unset,
+ * Runs without a database or file storage. With STORAGE_DIR unset,
  * asset ingestion degrades to data URLs, which is the code path that needs no
  * Prisma write, so `persistMedia: false` keeps this a pure unit test.
  */
@@ -250,7 +250,7 @@ describe("export → import round trip", () => {
     expect(imported.counts.needsReview).toBe(0);
     // The data-URL degradation is reported, not hidden.
     expect(imported.counts.assetsDegraded).toBe(1);
-    expect(imported.warnings.join(" ")).toContain("Blob storage is not configured");
+    expect(imported.warnings.join(" ")).toContain("File storage is not set up");
   });
 
   it("survives a second loop: export, import, export, import", async () => {

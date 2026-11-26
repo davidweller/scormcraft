@@ -33,7 +33,7 @@ async function tableExists(prisma: Raw, name: string): Promise<boolean> {
   return rows.length > 0;
 }
 
-/** `client` defaults to the app's; scripts/neon-to-local.ts passes its own SQLite client. */
+/** `client` defaults to the app's; tests pass their own. */
 export async function applyDesktopMigrations(
   migrationsDir: string,
   prisma: Raw = defaultClient
