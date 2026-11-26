@@ -16,7 +16,7 @@ Each file can be up to **4.5 MB**. Older Office formats (`.doc`, `.xls`, `.ppt`)
 
 ## Add a file to a page
 
-1. Open the course, choose **Edit course**, and select the page.
+1. Open the course, choose **Edit content**, and select the page.
 2. Add a block and choose **File download** from the content blocks.
 3. Click **Choose file**.
    - **Upload** adds a new file from your computer.

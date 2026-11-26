@@ -3,7 +3,7 @@
  * pass an LlmProvider from getLlm() in src/lib/llm.
  */
 
-import { parseJsonObject } from "@/lib/llm/json";
+import { completeJsonObject } from "@/lib/llm/json";
 import type { LlmProvider } from "@/lib/llm/types";
 
 export interface BlueprintContext {
@@ -46,48 +46,43 @@ ${context.complianceLevel ? `Compliance: ${context.complianceLevel}` : ""}
 `;
 
   if (section === "description") {
-    const { text } = await llm.completeJson({
+    return await completeJsonObject<{ description: string }>(llm, {
       system: basePrompt + 'Respond with a JSON object: { "description": "2-4 sentence course description" }',
       user: "Generate the course description.",
     });
-    return parseJsonObject(text) as { description: string };
   }
 
   if (section === "modules") {
-    const { text } = await llm.completeJson({
+    return await completeJsonObject<{ modules: { title: string }[] }>(llm, {
       system: basePrompt + 'Respond with a JSON object: { "modules": [ { "title": "Module 1 title" }, ... ] }. Suggest 3-6 modules.',
       user: "Generate module titles for this course.",
     });
-    return parseJsonObject(text) as { modules: { title: string }[] };
   }
 
   if (section === "lessons") {
     const modules = currentBlueprint?.modules ?? [];
     const moduleTitles = modules.map((m) => m.title).join(", ");
-    const { text } = await llm.completeJson({
+    return await completeJsonObject<{ lessons: { moduleIndex: number; title: string }[] }>(llm, {
       system: basePrompt +
         `Existing modules: ${moduleTitles}. Respond with a JSON object: { "lessons": [ { "moduleIndex": 0, "title": "Lesson title" }, ... ] }. moduleIndex is 0-based. Give 2-5 lessons per module.`,
       user: "Generate lesson titles for each module.",
     });
-    return parseJsonObject(text) as { lessons: { moduleIndex: number; title: string }[] };
   }
 
   if (section === "ilos") {
-    const { text } = await llm.completeJson({
+    return await completeJsonObject<{ ilos: string[] }>(llm, {
       system: basePrompt +
         'Respond with a JSON object: { "ilos": [ "By the end of this course learners will...", ... ] }. Provide 3-6 clear learning outcomes.',
       user: "Generate learning outcomes (ILOs).",
     });
-    return parseJsonObject(text) as { ilos: string[] };
   }
 
   if (section === "assessmentPlan") {
-    const { text } = await llm.completeJson({
+    return await completeJsonObject<{ assessmentPlan: string }>(llm, {
       system: basePrompt +
         'Respond with a JSON object: { "assessmentPlan": "2-5 sentence description of how and where assessment will occur (quizzes, knowledge checks, final quiz, etc.)." }',
       user: "Generate the assessment plan.",
     });
-    return parseJsonObject(text) as { assessmentPlan: string };
   }
 
   throw new Error(`Unknown section: ${section}`);
@@ -170,11 +165,10 @@ IMPORTANT HTML formatting rules for text blocks:
 
 Use "text" and "heading" only for contentBlocks. Keep content aligned to the lesson and ILOs.${context.targetWordCountPerLesson ? ` Aim for approximately ${context.targetWordCountPerLesson} words total in the text content.` : ""}`;
 
-  const { text } = await llm.completeJson({
+  const parsed = await completeJsonObject<GeneratedLessonContent>(llm, {
     system: "You output only valid JSON. No markdown code fences, no explanation.",
     user: prompt,
   });
-  const parsed = parseJsonObject(text) as GeneratedLessonContent;
   if (!Array.isArray(parsed.contentBlocks)) parsed.contentBlocks = [];
   return parsed;
 }
@@ -253,11 +247,10 @@ Respond with a JSON object:
   ]
 }`;
 
-  const { text } = await llm.completeJson({
+  const parsed = await completeJsonObject<GeneratedInteractionsResult>(llm, {
     system: "You output only valid JSON. No markdown code fences, no explanation.",
     user: prompt,
   });
-  const parsed = parseJsonObject(text) as GeneratedInteractionsResult;
   if (!Array.isArray(parsed.interactionBlocks)) parsed.interactionBlocks = [];
   
   const validTypes = new Set(options.types);
@@ -316,11 +309,10 @@ ${typeInstruction}
 Respond with a JSON object: { "content": { ... } }
 The content should be fresh and different from what might already exist, while remaining relevant to the lesson.`;
 
-  const { text } = await llm.completeJson({
+  return await completeJsonObject<{ content: Record<string, unknown> }>(llm, {
     system: "You output only valid JSON. No markdown code fences, no explanation.",
     user: prompt,
   });
-  return parseJsonObject(text) as { content: Record<string, unknown> };
 }
 
 export interface RegenerateInteractionBlockContext {
@@ -382,9 +374,8 @@ ${typeInstruction}
 Respond with a JSON object: { "config": { ... } }
 The question should be fresh and different, while testing key concepts from the lesson.`;
 
-  const { text } = await llm.completeJson({
+  return await completeJsonObject<{ config: Record<string, unknown> }>(llm, {
     system: "You output only valid JSON. No markdown code fences, no explanation.",
     user: prompt,
   });
-  return parseJsonObject(text) as { config: Record<string, unknown> };
 }

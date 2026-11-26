@@ -1,80 +1,124 @@
+<div align="center">
+
+<img src="build-resources/icon.png" alt="SCORMcraft logo" width="96" height="96" />
+
 # SCORMcraft
 
-A Windows desktop app for AI-assisted SCORM course authoring and export. Everything is local: courses in a SQLite file and uploads on disk under `%APPDATA%\SCORMcraft\data`. There is no hosted web version; it was retired in November 2026. [SCORM_Course_Builder_SaaS_PRD.md](./SCORM_Course_Builder_SaaS_PRD.md) is the original product scope and still describes the old hosted stack.
+**Write a training course with AI, edit it block by block, and export a SCORM package your LMS can run.**
 
-## Stack
+A Windows desktop app. Your courses stay on your computer.
 
-- **App:** Next.js 14 (App Router) + TypeScript + Tailwind, inside Electron
-- **DB:** SQLite with Prisma
-- **Storage:** files on disk, served at `/files/...`
+[![Version](https://img.shields.io/github/v/tag/davidweller/scormcraft?label=version&color=2563eb)](https://github.com/davidweller/scormcraft/tags)
+![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-2563eb)
+![Exports](https://img.shields.io/badge/exports-SCORM%201.2%20%7C%20Word-2563eb)
 
-## Setup
+[What it does](#what-it-does) · [Install](#install) · [Quick start](#quick-start) · [AI providers](#ai-providers) · [Documentation](#documentation) · [Development](#development)
 
-1. Install dependencies: `npm install`
-2. Optional: copy `.env.example` to `.env` and add API keys. Keys can also be added in the app's Settings.
-3. Run it: `npm run dev`. This opens the app in an Electron window on port 3417, with its data in `.desktop-data/`. The database is created and migrated at startup.
+</div>
 
-| Command | What it does |
+![The SCORMcraft course editor](docs/images/editor.png)
+
+## What it does
+
+SCORMcraft takes you from a topic, or a document you already have, to a finished e-learning course.
+
+- **Three ways to start.** Describe a course and let AI draft it, import a Word or Markdown document, or start blank.
+- **AI that asks first.** The AI drafts an outline. Nothing is written into lessons until you've edited and approved it.
+- **A block editor.** Text, headings, images, video, tables, key points and file downloads. Drag to reorder, or add a block anywhere with the + between blocks.
+- **Six kinds of interaction.** Multiple choice, true or false, reflection, drag and drop, matching and flip cards.
+- **Your content is protected.** AI only writes into empty lessons unless you say otherwise, rewrites are shown beside the original before you accept them, and History keeps the last 25 versions of each course.
+- **Your branding.** Colours, fonts, logo and three learner layouts.
+- **Preview and export.** Check the course at desktop, tablet and phone widths, then export SCORM 1.2 or a Word document.
+- **Local by design.** Courses live in a SQLite file and uploads sit in a folder on your computer. There's no account and no server.
+
+| Start a course | Approve the outline |
 |---|---|
-| `npm run dev` (or `desktop:dev`) | Runs the app in an Electron window with local data in `.desktop-data/` |
-| `npm run desktop:build:win` | Builds `dist/SCORMcraft Setup <version>.exe` (about 5 minutes) |
-| `npm run db:migrate -- --name <change>` | After changing `prisma/schema.prisma`, writes the matching migration into `prisma/migrations/`. It works on a scratch database; the app applies the migration to real data at its next start |
-| `npm run test` · `npm run lint` | Unit tests and lint |
+| ![Choosing how to start a course](docs/images/start.png) | ![Editing the AI's outline before anything is written](docs/images/ai-outline.png) |
 
-How it fits together:
+| Preview as a learner | Dark theme |
+|---|---|
+| ![Previewing the course](docs/images/preview.png) | ![The editor in the dark theme](docs/images/editor-dark.png) |
 
-- `electron/main.js` starts the standalone Next server with the environment from `electron/env.js`: `DATABASE_URL` (a `file:` url), `STORAGE_DIR`, `SETTINGS_PATH` and `MIGRATIONS_DIR`. Server logs go to `%APPDATA%\SCORMcraft\logs\server.log`.
-- The packaged app has no Prisma CLI, so `src/lib/desktop/migrate.ts` applies `prisma/migrations` itself at startup.
-- `src/lib/blob.ts` stores files under `STORAGE_DIR`. Server code reads stored files with `fetchStored`, not `fetch`.
+## Install
 
-## API (Phase 1)
+There are no published installers yet, so for now you build it yourself. It takes about 5 minutes.
 
-- `GET/POST /api/courses` — List, create courses.
-- `GET/PATCH/DELETE /api/courses/[courseId]` — Course CRUD; GET returns full tree (modules → lessons → pages → content blocks, interaction blocks).
-- Nested create/update/delete:
-  - `POST .../modules`, `PATCH/DELETE .../modules/[moduleId]`
-  - `POST .../lessons`, `PATCH/DELETE .../lessons/[lessonId]`
-  - `POST .../pages`, `PATCH/DELETE .../pages/[pageId]`
-  - `POST .../pages/[pageId]/content-blocks`, `PATCH/DELETE .../content-blocks/[blockId]`
-  - `POST .../pages/[pageId]/interaction-blocks`, `PATCH/DELETE .../interaction-blocks/[blockId]`
-- `POST /api/uploads` — FormData with `file`; returns `{ url }`.
+You need Windows 10 or 11, [Node.js](https://nodejs.org) 20 or later, and Git.
 
-## Starting a course
+```bash
+git clone https://github.com/davidweller/scormcraft.git
+cd scormcraft
+npm install
+npm run desktop:build:win
+```
 
-`/courses/new` offers three ways in:
+The installer is written to `dist/SCORMcraft Setup <version>.exe`. It isn't code-signed, so Windows SmartScreen will warn you the first time; choose **More info**, then **Run anyway**.
 
-- **Create with AI**: describe the course, then `/courses/[id]/build` drafts learning outcomes, modules and lessons. You edit and approve the outline, choose whether to add interactions, and the lessons are written one at a time. Nothing is written before the outline is approved, and lessons that already have content are skipped.
-- **Import a course**: a Word or Markdown document, or a package exported from SCORMcraft. Imports open in the editor with their content as written.
-- **Start blank**: an empty course, opened in the editor.
+Your courses are kept in `%APPDATA%\SCORMcraft\data`. Uninstalling the app leaves that folder alone.
 
-## Protecting content
+## Quick start
 
-- Saving the blueprint updates modules and lessons in place. Only ones removed from the blueprint are deleted, after a confirmation.
-- Lesson generation writes into empty lessons only. Regenerating a lesson that has content asks first, and replaces its text and headings but keeps images, tables, files and interactions.
-- "Rewrite with AI" on a block shows the new version beside the current one, with Replace, Insert below and Discard.
-- **History** (`/courses/[id]/history`): a version of the course is saved before a lesson is regenerated, before a module, lesson or page is deleted, and before a blueprint save that removes lessons. Any of the newest 25 can be restored.
+1. Open SCORMcraft and go to **Settings**. Sign in to a Claude or ChatGPT subscription, or paste in an API key. See [AI providers](#ai-providers).
+2. Choose **New course**, then **Create with AI**, and describe what the course should cover.
+3. Edit the outline the AI drafts: rename, reorder, add or remove modules and lessons. Choose **Approve outline**.
+4. Decide whether to add interactions, then choose **Build the course**. Lessons are written one at a time and you can stop at any point.
+5. Open the editor to change anything, **Preview** to see it as a learner, then **Export** to download the SCORM package.
 
-## Course builder (Phase 2)
-
-- **Edit course** (`/courses/[id]/edit`): The outline shows the course structure (modules → lessons → pages). Add, rename, duplicate, delete and reorder modules, lessons and pages, by dragging or from each row's menu. Click a page to edit.
-- **Blocks**: drag a block by its handle, or use Move up and Move down in its menu. The + between two blocks adds one at that position.
-- **Look and feel**: colours, fonts and the UI kit are described in `src/app/globals.css` and `src/components/ui/`. Use the `brand`, `gray` and `surface` colours rather than `bg-white` or raw `blue-*`, so the dark theme keeps working.
-- **Page editor**: Edit page title; add and edit **content blocks** (text, heading, image, video embed, table, file download) and **interaction blocks** (multiple choice, true/false, reflection). Changes save on blur.
-- **File downloads**: attach .docx, .xlsx, .pptx, .pdf or .csv files that are bundled into the SCORM package. See [docs/file-downloads.md](./docs/file-downloads.md).
+You don't need AI to write a course: **Start blank** opens an empty course in the editor. Importing a Word or Markdown document does use AI, to work out the document's structure; your wording is kept as written.
 
 ## AI providers
 
-Settings (home page, then Settings) picks the provider; a course can override it in its own settings.
+Pick one in **Settings**. A course can override it in its own settings.
 
-| Provider | Needs |
+| Provider | What you need |
 |---|---|
-| Claude subscription | [Claude Code](https://claude.com/claude-code) installed and signed in with a Pro/Max plan |
-| ChatGPT subscription | Codex CLI (`npm install -g @openai/codex`) signed in with a ChatGPT plan |
-| OpenAI API | An OpenAI key |
-| Anthropic API | An Anthropic key (default model `claude-opus-5-5`) |
+| Claude subscription | [Claude Code](https://claude.com/claude-code) installed and signed in with a Pro or Max plan |
+| ChatGPT subscription | The Codex CLI (`npm install -g @openai/codex`), signed in with a ChatGPT plan |
+| OpenAI API | An OpenAI API key |
+| Anthropic API | An Anthropic API key |
 
-The subscription providers run the official CLI on your machine (`src/lib/llm/claude-cli.ts`, `codex-cli.ts`), so usage counts against your plan. They are for your own use. Image generation still needs a Gemini key.
+The subscription options run the official command-line tool on your own computer, so usage counts against your plan and no API key is needed. Generating images needs a Google Gemini API key.
 
-## MVP scope
+API keys are stored in a settings file on your computer. Course content is sent to the provider you choose only when you use an AI feature: building a course, rewriting a block, generating interactions or importing a document.
 
-Per PRD Section 13: structured courses, three interaction types (multiple choice, true/false, reflection), valid SCORM 1.2 export, completion/score tracking, branding, SCORM Cloud validation.
+## Documentation
+
+| Guide | What's in it |
+|---|---|
+| [User guide](docs/user-guide.md) | Every journey through the app: starting, editing, AI, importing, history, branding, preview and export |
+| [Adding downloadable files](docs/file-downloads.md) | Attaching worksheets, templates and spreadsheets to a course |
+| [Development guide](docs/development.md) | Running from source, how the app is put together, database changes and releases |
+| [Changelog](CHANGELOG.md) | What changed in each version |
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+This opens the app in an Electron window with its data in `.desktop-data/`. The database is created and updated at startup.
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Runs the app from source |
+| `npm run test` | Unit tests (Vitest) |
+| `npm run lint` | ESLint |
+| `npm run db:migrate -- --name <change>` | Writes a migration after a change to `prisma/schema.prisma` |
+| `npm run desktop:build:win` | Builds the Windows installer |
+
+Built with Next.js 14, React, TypeScript, Tailwind, Prisma on SQLite, and Electron. The [development guide](docs/development.md) covers the architecture.
+
+## Status
+
+SCORMcraft is a personal project in active development. It began as a hosted web app; that version was retired in November 2026 and the app is now desktop only. The original product documents are kept in [docs/archive](docs/archive) for history and no longer describe how it works.
+
+Known limits:
+
+- Windows only.
+- SCORM 1.2 only. SCORM 2004 isn't available yet.
+- SCORM import reads packages exported from SCORMcraft, not packages from other tools.
+
+## Licence
+
+No licence has been chosen yet, so all rights are reserved. You're welcome to read the code and build it for your own use.

@@ -111,3 +111,23 @@ describe("getLlm provider resolution", () => {
     expect(resolveApiKey("anthropic", "course-key")).toBe("course-key");
   });
 });
+
+describe("completeJsonObject", () => {
+  const provider = (replies: string[]) => {
+    const completeJson = vi.fn(async () => ({ text: replies.shift() ?? "", truncated: false, model: "test" }));
+    return { llm: { id: "openai-api" as const, label: "Test", completeJson }, completeJson };
+  };
+
+  it("retries once when the reply is not valid JSON", async () => {
+    const { completeJsonObject } = await import("./json");
+    const { llm, completeJson } = provider(['{"a": 1, b}', '{"a": 2}']);
+    expect(await completeJsonObject<{ a: number }>(llm, { system: "s", user: "u" })).toEqual({ a: 2 });
+    expect(completeJson).toHaveBeenCalledTimes(2);
+  });
+
+  it("gives a plain error after two malformed replies", async () => {
+    const { completeJsonObject } = await import("./json");
+    const { llm } = provider(["{oops", "{oops"]);
+    await expect(completeJsonObject(llm, { system: "s", user: "u" })).rejects.toThrow("couldn't be read");
+  });
+});
