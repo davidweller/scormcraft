@@ -27,7 +27,7 @@ export default async function CoursePage({
   const seatTimeMin = getEstimatedSeatTimeMinutes(course);
 
   return (
-    <main className="min-h-screen p-6 lg:p-8">
+    <main className="min-h-[calc(100vh-3rem)] p-6 lg:p-8">
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center gap-4">
           <Link href="/courses" className="text-brand-600 hover:underline">

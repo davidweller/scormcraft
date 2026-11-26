@@ -116,7 +116,7 @@ export default function AppSettingsPage() {
   const codex = data.cli.codex;
 
   return (
-    <main className="min-h-screen bg-gray-50/40 p-6 lg:p-8">
+    <main className="min-h-[calc(100vh-3rem)] bg-gray-50/40 p-6 lg:p-8">
       <div className="mx-auto max-w-2xl space-y-8">
         <div>
           <Link href="/" className="text-sm text-brand-600 hover:underline">

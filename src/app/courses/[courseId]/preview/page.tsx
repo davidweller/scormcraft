@@ -36,7 +36,7 @@ export default async function PreviewPage({
   const noContent = totalPages === 0;
 
   return (
-    <main className="min-h-screen flex flex-col p-6 lg:p-8">
+    <main className="min-h-[calc(100vh-3rem)] flex flex-col p-6 lg:p-8">
       <div className="mb-4 flex items-center gap-4 flex-wrap">
         <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">
           ← Back to course

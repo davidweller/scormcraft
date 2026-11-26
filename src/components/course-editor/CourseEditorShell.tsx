@@ -34,7 +34,7 @@ export function CourseEditorShell({ selectedPageId }: { selectedPageId: string |
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-8">
+      <div className="flex min-h-[calc(100vh-3rem)] items-center justify-center p-8">
         <p className="text-gray-500">Loading course…</p>
       </div>
     );
@@ -42,7 +42,7 @@ export function CourseEditorShell({ selectedPageId }: { selectedPageId: string |
 
   if (error || !course) {
     return (
-      <div className="min-h-screen p-8">
+      <div className="min-h-[calc(100vh-3rem)] p-8">
         <Link href="/courses" className="text-brand-600 hover:underline">← Courses</Link>
         <p className="mt-4 text-red-600">{error || "Course not found"}</p>
       </div>
@@ -52,7 +52,7 @@ export function CourseEditorShell({ selectedPageId }: { selectedPageId: string |
   const pageContext = selectedPageId ? findPage(course, selectedPageId) : null;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[calc(100vh-3rem)]">
       <aside className="w-72 shrink-0 border-r border-gray-200 bg-gray-50 p-4">
         <Link href={`/courses/${courseId}`} className="text-sm text-brand-600 hover:underline">
           ← Back to course

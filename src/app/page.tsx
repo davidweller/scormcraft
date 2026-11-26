@@ -67,7 +67,7 @@ export default function Home() {
   const hasCourses = recentCourses.length > 0;
 
   return (
-    <main className="min-h-screen bg-gray-50/40">
+    <main className="min-h-[calc(100vh-3rem)] bg-gray-50/40">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <section className="rounded-lg border border-gray-200 bg-gradient-to-r from-brand-50 to-brand-50 p-6 shadow-sm">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">

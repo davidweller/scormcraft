@@ -205,7 +205,7 @@ export default function GenerateInteractionsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen p-8">
+      <main className="min-h-[calc(100vh-3rem)] p-8">
         <p className="text-gray-500">Loading…</p>
       </main>
     );
@@ -213,7 +213,7 @@ export default function GenerateInteractionsPage() {
 
   if (error && !course) {
     return (
-      <main className="min-h-screen p-8">
+      <main className="min-h-[calc(100vh-3rem)] p-8">
         <Link href="/courses" className="text-brand-600 hover:underline">
           ← Courses
         </Link>
@@ -227,7 +227,7 @@ export default function GenerateInteractionsPage() {
     typeof course?.assessmentPlan === "string" ? course.assessmentPlan : null;
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mx-auto max-w-3xl">
         <div>
           <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">

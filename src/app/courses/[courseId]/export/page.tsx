@@ -51,7 +51,7 @@ export default function ExportPage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mx-auto max-w-xl">
         <div>
           <Link href={`/courses/${courseId}`} className="text-brand-600 hover:underline">← Course</Link>

@@ -65,7 +65,7 @@ export default function CoursesPage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Courses</h1>
         <Link

@@ -88,7 +88,7 @@ export default function NewCoursePage() {
   }
 
   return (
-    <main className="min-h-screen p-8">
+    <main className="min-h-[calc(100vh-3rem)] p-8">
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center justify-between gap-3">
           <div>
