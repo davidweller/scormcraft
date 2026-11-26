@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { generatePagesForLesson } from "@/lib/generate-lesson-pages";
+import { generatePagesForLesson, LESSON_HAS_CONTENT } from "@/lib/generate-lesson-pages";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ courseId: string; lessonId: string }> }
 ) {
   const { courseId, lessonId } = await params;
   try {
-    const result = await generatePagesForLesson(courseId, lessonId);
+    // A lesson that already has content is only regenerated on request.
+    const body = (await request.json().catch(() => ({}))) as { overwrite?: boolean };
+    const result = await generatePagesForLesson(courseId, lessonId, {
+      overwrite: body.overwrite === true,
+    });
     if (!result.success) {
-      const status = result.error === "Course not found" || result.error === "Lesson not found" ? 404 : 400;
+      const status =
+        result.error === "Course not found" || result.error === "Lesson not found"
+          ? 404
+          : result.error === LESSON_HAS_CONTENT
+            ? 409
+            : 400;
       return NextResponse.json({ error: result.error }, { status });
     }
     const page = await prisma.page.findUnique({

@@ -3,7 +3,24 @@ import { prisma } from "@/lib/db";
 import { generateLessonContent } from "@/lib/ai";
 import { courseAiSettings, getLlm, type LlmProvider } from "@/lib/llm";
 
-export async function generatePagesForLesson(courseId: string, lessonId: string): Promise<{ success: true; pageId: string } | { success: false; error: string }> {
+/** Returned when a lesson already has content and the caller did not ask to replace it. */
+export const LESSON_HAS_CONTENT = "This lesson already has content.";
+
+/** Block types that lesson generation writes, and so the only ones it may replace. */
+const GENERATED_TYPES = ["text", "heading"];
+
+export async function lessonHasContent(lessonId: string): Promise<boolean> {
+  const count = await prisma.block.count({
+    where: { category: "content", page: { lessonId } },
+  });
+  return count > 0;
+}
+
+export async function generatePagesForLesson(
+  courseId: string,
+  lessonId: string,
+  options: { overwrite?: boolean } = {}
+): Promise<{ success: true; pageId: string } | { success: false; error: string }> {
   const course = await prisma.course.findUnique({
     where: { id: courseId },
     select: {
@@ -34,6 +51,11 @@ export async function generatePagesForLesson(courseId: string, lessonId: string)
     select: { id: true, title: true },
   });
   if (!lesson) return { success: false, error: "Lesson not found" };
+
+  // Checked before the AI call, so a refused request costs nothing.
+  if (!options.overwrite && (await lessonHasContent(lessonId))) {
+    return { success: false, error: LESSON_HAS_CONTENT };
+  }
 
   let llm: LlmProvider;
   try {
@@ -72,20 +94,43 @@ export async function generatePagesForLesson(courseId: string, lessonId: string)
     });
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.block.deleteMany({ where: { pageId: page!.id, category: "content" } });
+  const newBlocks = generated.contentBlocks.filter(
+    (b) => b.type === "text" || b.type === "heading"
+  );
 
-    for (let i = 0; i < generated.contentBlocks.length; i++) {
-      const b = generated.contentBlocks[i];
-      if (b.type !== "text" && b.type !== "heading") continue;
+  await prisma.$transaction(async (tx) => {
+    // Replace only the text and headings. Images, tables, file downloads,
+    // preserved pages and interactions on the page are kept.
+    await tx.block.deleteMany({
+      where: { pageId: page!.id, category: "content", type: { in: GENERATED_TYPES } },
+    });
+
+    for (let i = 0; i < newBlocks.length; i++) {
+      const b = newBlocks[i];
       await tx.block.create({
-        data: { 
-          pageId: page!.id, 
+        data: {
+          pageId: page!.id,
           category: "content",
-          type: b.type, 
-          data: b.content ?? {}, 
-          order: i 
+          type: b.type,
+          data: b.content ?? {},
+          order: i,
         },
+      });
+    }
+
+    // Kept blocks follow the new text, in the order they were already in.
+    const kept = await tx.block.findMany({
+      where: {
+        pageId: page!.id,
+        NOT: { category: "content", type: { in: GENERATED_TYPES } },
+      },
+      orderBy: { order: "asc" },
+      select: { id: true },
+    });
+    for (let i = 0; i < kept.length; i++) {
+      await tx.block.update({
+        where: { id: kept[i].id },
+        data: { order: newBlocks.length + i },
       });
     }
   });
