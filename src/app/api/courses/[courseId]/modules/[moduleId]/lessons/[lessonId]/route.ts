@@ -1,3 +1,4 @@
+import { takeSnapshot } from "@/lib/snapshots";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
@@ -31,8 +32,10 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ courseId: string; moduleId: string; lessonId: string }> }
 ) {
-  const { lessonId } = await params;
+  const { courseId, lessonId } = await params;
   try {
+    const doomed = await prisma.lesson.findUnique({ where: { id: lessonId }, select: { title: true } });
+    if (doomed) await takeSnapshot(courseId, `Before deleting the lesson "${doomed.title}"`);
     await prisma.lesson.delete({ where: { id: lessonId } });
     return new NextResponse(null, { status: 204 });
   } catch (e) {

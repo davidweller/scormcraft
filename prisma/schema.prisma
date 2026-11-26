@@ -29,6 +29,20 @@ model Course {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   modules         Module[]
+  snapshots       CourseSnapshot[]
+}
+
+// A saved copy of a course's outline and content, taken before an action
+// that replaces or deletes content, so the author can go back.
+model CourseSnapshot {
+  id        String   @id @default(cuid())
+  courseId  String
+  reason    String   // What was about to happen, e.g. "Before regenerating Lesson 2"
+  data      Json     // SnapshotData, see src/lib/snapshots.ts
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, createdAt])
 }
 
 model Module {

@@ -1,3 +1,4 @@
+import { takeSnapshot } from "@/lib/snapshots";
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { JsonNull, prisma } from "@/lib/db";
@@ -28,6 +29,18 @@ export async function POST(
       ilos?: string[];
       assessmentPlan?: string;
     };
+
+    // A save that removes modules or lessons takes their content with it.
+    if (Array.isArray(modulesInput) && modulesInput.length > 0) {
+      const existing = await prisma.module.findMany({
+        where: { courseId },
+        select: { id: true, lessons: { select: { id: true } } },
+      });
+      const plan = planBlueprintApply(existing, modulesInput);
+      if (plan.deleteModuleIds.length > 0 || plan.deleteLessonIds.length > 0) {
+        await takeSnapshot(courseId, "Before a blueprint save that removed modules or lessons");
+      }
+    }
 
     await prisma.$transaction(async (tx) => {
       await tx.course.update({

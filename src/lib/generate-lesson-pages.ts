@@ -1,3 +1,4 @@
+import { takeSnapshot } from "@/lib/snapshots";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { generateLessonContent } from "@/lib/ai";
@@ -92,6 +93,11 @@ export async function generatePagesForLesson(
     page = await prisma.page.create({
       data: { lessonId, title: lesson.title, order: 0 },
     });
+  }
+
+  // Taken after the AI call succeeds, so a failed generation leaves no entry.
+  if (options.overwrite && (await lessonHasContent(lessonId))) {
+    await takeSnapshot(courseId, `Before regenerating the lesson "${lesson.title}"`);
   }
 
   const newBlocks = generated.contentBlocks.filter(
