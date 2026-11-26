@@ -4,9 +4,16 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
-interface BlueprintModule {
+interface BlueprintLesson {
+  /** Set for lessons that already exist, so saving keeps their content. */
+  id?: string;
   title: string;
-  lessons: { title: string }[];
+}
+
+interface BlueprintModule {
+  id?: string;
+  title: string;
+  lessons: BlueprintLesson[];
 }
 
 export default function BlueprintPage() {
@@ -33,6 +40,7 @@ export default function BlueprintPage() {
   const [assessmentPlan, setAssessmentPlan] = useState("");
   const [regenerating, setRegenerating] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   const loadCourse = useCallback(async () => {
     setError(null);
@@ -47,9 +55,10 @@ export default function BlueprintPage() {
       setDescription(data.overview ?? "");
       setTargetWordCount(typeof data.targetWordCount === "number" ? data.targetWordCount : "");
       setModules(
-        (data.modules ?? []).map((m: { title: string; lessons: { title: string }[] }) => ({
+        (data.modules ?? []).map((m: { id: string; title: string; lessons: { id: string; title: string }[] }) => ({
+          id: m.id,
           title: m.title,
-          lessons: (m.lessons ?? []).map((l: { title: string }) => ({ title: l.title })),
+          lessons: (m.lessons ?? []).map((l: { id: string; title: string }) => ({ id: l.id, title: l.title })),
         }))
       );
       setIlos(Array.isArray(data.ilos) ? data.ilos : []);
@@ -86,7 +95,7 @@ export default function BlueprintPage() {
       if (data.description !== undefined) setDescription(data.description);
       if (data.modules !== undefined) setModules(data.modules.map((m: { title: string }) => ({ ...m, lessons: [] })));
       if (data.lessons !== undefined && Array.isArray(data.lessons)) {
-        const byModule: { title: string; lessons: { title: string }[] }[] = modules.map((m) => ({ title: m.title, lessons: [] }));
+        const byModule: BlueprintModule[] = modules.map((m) => ({ id: m.id, title: m.title, lessons: [] }));
         data.lessons.forEach((l: { moduleIndex: number; title: string }) => {
           if (byModule[l.moduleIndex]) byModule[l.moduleIndex].lessons.push({ title: l.title });
         });
@@ -101,7 +110,33 @@ export default function BlueprintPage() {
     }
   }
 
-  async function handleApply() {
+  /** Saved modules and lessons that the current blueprint no longer contains. */
+  function countRemoved() {
+    const kept = modules.filter((m) => m.title.trim());
+    const keptModules = new Set(kept.map((m) => m.id));
+    const keptLessons = new Set(
+      kept.flatMap((m) => (m.lessons ?? []).filter((l) => l.title.trim()).map((l) => l.id))
+    );
+    const saved = course?.modules ?? [];
+    return {
+      modules: saved.filter((m) => !keptModules.has(m.id)).length,
+      lessons: saved.flatMap((m) => m.lessons ?? []).filter((l) => !keptLessons.has(l.id)).length,
+    };
+  }
+
+  /** Saves the blueprint. Returns true on success. */
+  async function handleSave(): Promise<boolean> {
+    const removed = countRemoved();
+    if (removed.modules > 0 || removed.lessons > 0) {
+      const parts = [
+        removed.modules > 0 ? `${removed.modules} module${removed.modules === 1 ? "" : "s"}` : "",
+        removed.lessons > 0 ? `${removed.lessons} lesson${removed.lessons === 1 ? "" : "s"}` : "",
+      ].filter(Boolean);
+      const ok = window.confirm(
+        `Saving will delete ${parts.join(" and ")} no longer in the blueprint, along with any content written there. Continue?`
+      );
+      if (!ok) return false;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -112,8 +147,11 @@ export default function BlueprintPage() {
           description: description.trim() || undefined,
           targetWordCount: targetWordCount !== "" ? targetWordCount : undefined,
           modules: modules.filter((m) => m.title.trim()).map((m) => ({
+            id: m.id,
             title: m.title.trim(),
-            lessons: (m.lessons ?? []).filter((l) => l.title.trim()).map((l) => ({ title: l.title.trim() })),
+            lessons: (m.lessons ?? [])
+              .filter((l) => l.title.trim())
+              .map((l) => ({ id: l.id, title: l.title.trim() })),
           })),
           ilos: ilos.filter(Boolean),
           assessmentPlan: assessmentPlan.trim() || undefined,
@@ -123,12 +161,20 @@ export default function BlueprintPage() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Save failed");
       }
-      router.push(`/courses/${courseId}/generate`);
+      // Reload so newly created modules and lessons pick up their ids.
+      await loadCourse();
+      setSavedAt(Date.now());
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Save failed");
+      return false;
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleSaveAndGenerate() {
+    if (await handleSave()) router.push(`/courses/${courseId}/generate`);
   }
 
   function addModule() {
@@ -385,22 +431,39 @@ export default function BlueprintPage() {
           </div>
         </section>
 
-        <div className="mt-10 flex gap-2">
+        <div className="mt-10 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={handleApply}
+            onClick={handleSave}
             disabled={saving}
             className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
           >
-            {saving ? "Saving…" : "Save & generate lessons"}
+            {saving ? "Saving…" : "Save blueprint"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveAndGenerate}
+            disabled={saving}
+            className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            Save and go to lesson generation →
           </button>
           <Link
             href={`/courses/${courseId}/edit`}
-            className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+            className="rounded px-4 py-2 text-gray-600 hover:bg-gray-50"
           >
-            Skip to editor
+            Open editor
           </Link>
+          {savedAt && !saving && (
+            <span className="text-sm text-green-700" role="status">
+              Saved
+            </span>
+          )}
         </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Saving keeps the content already written in your lessons. Only modules and lessons you
+          remove here are deleted.
+        </p>
       </div>
     </main>
   );
