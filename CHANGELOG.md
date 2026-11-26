@@ -2,7 +2,12 @@
 
 Notable changes to SCORMcraft, newest first.
 
-## Unreleased
+## 1.1.1 (26 November 2026)
+
+### Added
+
+- SCORMcraft is now open source under the MIT licence.
+- A Windows installer is attached to each release on GitHub.
 
 ### Fixed
 

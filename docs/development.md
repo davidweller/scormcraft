@@ -38,6 +38,8 @@ API keys are optional. Add them in the app's Settings, or copy `.env.example` to
 | `npm run desktop:build` | Builds the standalone server bundle only |
 | `npm run desktop:build:win` | Builds the Windows installer into `dist/` (about 5 minutes) |
 
+The code is under the [MIT licence](../LICENSE).
+
 Stop the dev server before `db:generate`, `db:migrate` or a build. It holds the Prisma engine file open and the command fails with `EPERM`.
 
 ## How it fits together
@@ -159,6 +161,9 @@ dist\win-unpacked\SCORMcraft.exe --user-data-dir=C:\temp\scormcraft-test
 1. Update `CHANGELOG.md`.
 2. Bump the version: `npm version <x.y.z> --no-git-tag-version`, then commit.
 3. Tag it: `git tag -a v<x.y.z> -m "Version <x.y.z>"` and push the tag.
-4. Run `npm run desktop:build:win`. The installer is `dist/SCORMcraft Setup <x.y.z>.exe`.
+
+Pushing the tag runs `.github/workflows/release.yml`, which tests, builds the installer and publishes a GitHub Release with `SCORMcraft-Setup-<x.y.z>.exe` attached. It takes about 10 minutes. The release notes are that version's section of `CHANGELOG.md`, so the heading must read `## <x.y.z> (date)`, and the tag must match the version in `package.json`.
+
+To build an installer by hand, run `npm run desktop:build:win`. It's written to `dist/SCORMcraft-Setup-<x.y.z>.exe`.
 
 The installer isn't code-signed, so Windows SmartScreen warns on first run. Installing over an older version keeps the user's data folder, and the new version migrates the database at its first start.

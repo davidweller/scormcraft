@@ -8,7 +8,8 @@
 
 A Windows desktop app. Your courses stay on your computer.
 
-[![Version](https://img.shields.io/github/v/tag/davidweller/scormcraft?label=version&color=2563eb)](https://github.com/davidweller/scormcraft/tags)
+[![Version](https://img.shields.io/github/v/release/davidweller/scormcraft?label=version&color=2563eb)](https://github.com/davidweller/scormcraft/releases/latest)
+[![Licence](https://img.shields.io/badge/licence-MIT-2563eb)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-2563eb)
 ![Exports](https://img.shields.io/badge/exports-SCORM%201.2%20%7C%20Word-2563eb)
 
@@ -41,9 +42,17 @@ SCORMcraft takes you from a topic, or a document you already have, to a finished
 
 ## Install
 
-There are no published installers yet, so for now you build it yourself. It takes about 5 minutes.
+You need Windows 10 or 11.
 
-You need Windows 10 or 11, [Node.js](https://nodejs.org) 20 or later, and Git.
+1. Open the [latest release](https://github.com/davidweller/scormcraft/releases/latest).
+2. Download `SCORMcraft-Setup-<version>.exe`.
+3. Run it. The installer isn't code-signed, so Windows SmartScreen will warn you the first time; choose **More info**, then **Run anyway**.
+
+Your courses are kept in `%APPDATA%\SCORMcraft\data`. Installing a newer version over an older one keeps them, and uninstalling the app leaves that folder alone.
+
+### Build it yourself
+
+You need [Node.js](https://nodejs.org) 20 or later, and Git. It takes about 5 minutes.
 
 ```bash
 git clone https://github.com/davidweller/scormcraft.git
@@ -52,9 +61,7 @@ npm install
 npm run desktop:build:win
 ```
 
-The installer is written to `dist/SCORMcraft Setup <version>.exe`. It isn't code-signed, so Windows SmartScreen will warn you the first time; choose **More info**, then **Run anyway**.
-
-Your courses are kept in `%APPDATA%\SCORMcraft\data`. Uninstalling the app leaves that folder alone.
+The installer is written to `dist/SCORMcraft-Setup-<version>.exe`.
 
 ## Quick start
 
@@ -121,4 +128,4 @@ Known limits:
 
 ## Licence
 
-No licence has been chosen yet, so all rights are reserved. You're welcome to read the code and build it for your own use.
+[MIT](LICENSE). You can use, change and share SCORMcraft, including commercially, as long as you keep the copyright notice.

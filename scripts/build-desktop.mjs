@@ -52,6 +52,8 @@ if (!existsSync(join(standalone, "node_modules", ".prisma", "client", "query_eng
   throw new Error("Prisma engine missing from the standalone bundle.");
 }
 
-if (win) run("npx electron-builder --win --config electron-builder.config.js");
+// `--publish never`: on CI electron-builder would otherwise try to upload the
+// installer itself. The release workflow does that.
+if (win) run("npx electron-builder --win --publish never --config electron-builder.config.js");
 
 console.log("\nDone." + (win ? " Installer is in dist/." : ""));

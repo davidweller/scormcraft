@@ -2,7 +2,7 @@
 module.exports = {
   appId: 'com.scormcraft.desktop',
   productName: 'SCORMcraft',
-  copyright: 'Copyright © 2026',
+  copyright: 'Copyright © 2026 David Weller',
 
   directories: {
     output: 'dist',
@@ -31,6 +31,8 @@ module.exports = {
   },
 
   nsis: {
+    // No spaces, so the download link on GitHub keeps the same name.
+    artifactName: 'SCORMcraft-Setup-${version}.${ext}',
     oneClick: false,
     perMachine: false,
     allowToChangeInstallationDirectory: true,
