@@ -31,7 +31,9 @@ export default function NewCoursePage() {
   const [showScormImportModal, setShowScormImportModal] = useState(false);
 
   function handleImportComplete(courseId: string) {
-    router.push(`/courses/${courseId}/blueprint`);
+    // Straight to the editor: an imported document already has its structure
+    // and content, so the blueprint and generation steps have nothing to add.
+    router.push(`/courses/${courseId}/edit`);
   }
 
   function handleScormImportComplete(courseId: string) {
